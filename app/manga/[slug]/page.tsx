@@ -24,6 +24,11 @@ export async function generateMetadata({ params }: MangaDetailPageProps): Promis
   return {
     title: `${manga.title} | RCPU`,
     description: manga.description,
+    openGraph: {
+      title: `${manga.title} | RCPU`,
+      description: manga.description,
+      images: [{ url: manga.heroImage }],
+    },
   };
 }
 

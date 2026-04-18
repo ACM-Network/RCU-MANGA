@@ -1,14 +1,25 @@
 "use client";
 
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ChapterComments } from "@/components/comments/chapter-comments";
+import { ReaderPanel } from "@/components/reader/reader-panel";
 import { Button } from "@/components/ui/button";
 import { useUserLibrary } from "@/hooks/use-user-library";
 import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
+
+const ChapterComments = dynamic(
+  () => import("@/components/comments/chapter-comments").then((module) => module.ChapterComments),
+  {
+    loading: () => (
+      <div className="rounded-[30px] border border-white/8 bg-white/[0.03] p-6 text-zinc-300">
+        Loading chapter discussion...
+      </div>
+    ),
+  },
+);
 
 interface ChapterReaderClientProps {
   manga: Manga;
@@ -29,6 +40,7 @@ export function ChapterReaderClient({
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<AudioContext | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const lastSavedIndexRef = useRef(-1);
   const { profile, saveProgress, toggleLikedChapter } = useUserLibrary();
 
   const isLiked = profile.likedChapters.includes(chapter.id);
@@ -48,6 +60,8 @@ export function ChapterReaderClient({
         if (!visible) return;
 
         const index = Number((visible.target as HTMLElement).dataset.panelIndex ?? 0);
+        if (lastSavedIndexRef.current === index) return;
+        lastSavedIndexRef.current = index;
         const nextProgress = (index + 1) / chapter.images.length;
         setProgress(nextProgress);
         void saveProgress(manga.slug, chapter.id, nextProgress);
@@ -101,6 +115,16 @@ export function ChapterReaderClient({
     [chapter.number, chapter.title],
   );
 
+  const savedProgress =
+    profile.readingHistory[manga.slug]?.chapterId === chapter.id
+      ? profile.readingHistory[manga.slug]?.progress ?? 0
+      : 0;
+  const displayedProgress = Math.max(progress, savedProgress);
+
+  useEffect(() => {
+    lastSavedIndexRef.current = Math.max(-1, Math.floor(savedProgress * chapter.images.length) - 1);
+  }, [chapter.id, chapter.images.length, savedProgress]);
+
   async function toggleFullscreen() {
     if (!containerRef.current) return;
 
@@ -125,6 +149,9 @@ export function ChapterReaderClient({
               <p className="mt-2 text-sm text-zinc-300">{chapterLabel}</p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <Button variant="ghost" onClick={() => window.history.back()}>
+                Back
+              </Button>
               <Button variant="secondary" onClick={() => void toggleLikedChapter(chapter.id)}>
                 {isLiked ? "Unlike Chapter" : "Like Chapter"}
               </Button>
@@ -139,32 +166,32 @@ export function ChapterReaderClient({
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-gradient-to-r from-rose-500 via-red-500 to-violet-600 transition-all duration-300"
-              style={{ width: `${Math.max(6, progress * 100)}%` }}
+              style={{ width: `${Math.max(6, displayedProgress * 100)}%` }}
             />
           </div>
         </div>
 
         <div className="space-y-5">
           {chapter.images.map((image, index) => (
-            <figure
+            <ReaderPanel
               key={`${chapter.id}-${image}-${index}`}
-              data-panel-index={index}
-              className="overflow-hidden rounded-[32px] border border-white/8 bg-black/40"
-            >
-              <Image
-                src={image}
-                alt={`${manga.title} ${chapter.title} panel ${index + 1}`}
-                width={1400}
-                height={2400}
-                priority={index === 0}
-                sizes="(max-width: 768px) 100vw, 920px"
-                className="h-auto w-full object-cover"
-              />
-            </figure>
+              index={index}
+              src={image}
+              alt={`${manga.title} ${chapter.title} panel ${index + 1}`}
+              priority={index === 0}
+            />
           ))}
         </div>
 
-        <div className="grid gap-4 rounded-[30px] border border-white/8 bg-white/[0.03] p-5 sm:grid-cols-2 sm:p-6">
+        <div className="grid gap-4 rounded-[30px] border border-white/8 bg-white/[0.03] p-5 sm:grid-cols-3 sm:p-6">
+          <Link
+            href={`/manga/${manga.slug}`}
+            className="rounded-[24px] border border-white/8 bg-black/30 p-5 transition hover:bg-white/5"
+          >
+            <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Browse</p>
+            <p className="mt-2 section-title text-2xl text-white">Back to Library</p>
+          </Link>
+
           {previous ? (
             <Link
               href={`/manga/${manga.slug}/chapter/${previous.id}`}
@@ -182,9 +209,9 @@ export function ChapterReaderClient({
           {next ? (
             <Link
               href={`/manga/${manga.slug}/chapter/${next.id}`}
-              className="rounded-[24px] border border-white/8 bg-black/30 p-5 transition hover:bg-white/5"
+              className="rounded-[24px] border border-rose-500/20 bg-rose-500/8 p-5 transition hover:bg-rose-500/12"
             >
-              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Next</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-rose-300">Next Chapter</p>
               <p className="mt-2 section-title text-2xl text-white">{next.title}</p>
             </Link>
           ) : (

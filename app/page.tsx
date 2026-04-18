@@ -2,10 +2,10 @@ import { ContinueReading } from "@/components/home/continue-reading";
 import { HeroBanner } from "@/components/home/hero-banner";
 import { PosterCard } from "@/components/manga/poster-card";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { getFeaturedManga, getLatestUpdates, getTrendingManga } from "@/lib/content";
+import { getFeaturedMangaList, getLatestUpdates, getTrendingManga } from "@/lib/content";
 
 export default function HomePage() {
-  const featured = getFeaturedManga();
+  const featured = getFeaturedMangaList(3);
   const trending = getTrendingManga();
   const latest = getLatestUpdates();
 

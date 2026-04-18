@@ -3,7 +3,8 @@
     transform 220ms ease,
     border-color 220ms ease,
     background-color 220ms ease,
-    box-shadow 220ms ease;
+    box-shadow 220ms ease,
+    filter 220ms ease;
 }
 
 .card-hover:hover {
@@ -11,7 +12,9 @@
   border-color: rgba(255, 43, 85, 0.35);
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 43, 85, 0.18);
+    0 0 0 1px rgba(255, 43, 85, 0.18),
+    0 0 28px rgba(255, 43, 85, 0.12);
+  filter: saturate(1.06);
 }
 
 .film-fade {

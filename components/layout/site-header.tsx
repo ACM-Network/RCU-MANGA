@@ -18,10 +18,10 @@ export function SiteHeader() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-black/35 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/6 bg-black/45 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-violet-700 text-sm font-black tracking-[0.22em] text-white">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-fuchsia-700 text-sm font-black tracking-[0.22em] text-white shadow-[0_0_24px_rgba(255,49,93,0.25)]">
             RCPU
           </div>
           <div>
@@ -40,7 +40,9 @@ export function SiteHeader() {
                 href={link.href}
                 className={cn(
                   "rounded-full px-4 py-2 text-sm font-medium uppercase tracking-[0.18em] transition",
-                  isActive ? "bg-white/10 text-white" : "text-zinc-400 hover:bg-white/5 hover:text-white",
+                  isActive
+                    ? "bg-white/10 text-white shadow-[0_0_20px_rgba(255,49,93,0.12)]"
+                    : "text-zinc-400 hover:bg-white/5 hover:text-white",
                 )}
               >
                 {link.label}

@@ -21,6 +21,11 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
   return {
     title: `${result.manga.title} - ${result.chapter.title} | RCPU`,
     description: result.chapter.synopsis,
+    openGraph: {
+      title: `${result.manga.title} - ${result.chapter.title} | RCPU`,
+      description: result.chapter.synopsis,
+      images: [{ url: result.manga.heroImage }],
+    },
   };
 }
 

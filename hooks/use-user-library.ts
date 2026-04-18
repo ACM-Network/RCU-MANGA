@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -29,12 +29,12 @@ export function useUserLibrary() {
     return unsubscribe;
   }, [user?.displayName, user?.email, user?.uid]);
 
-  async function updateProfile(nextProfile: UserLibraryProfile) {
+  const updateProfile = useCallback(async (nextProfile: UserLibraryProfile) => {
     setProfile(nextProfile);
     await persistUserLibrary(nextProfile);
-  }
+  }, []);
 
-  async function toggleBookmark(mangaSlug: string) {
+  const toggleBookmark = useCallback(async (mangaSlug: string) => {
     const isBookmarked = profile.bookmarks.includes(mangaSlug);
     const nextProfile = {
       ...profile,
@@ -43,9 +43,14 @@ export function useUserLibrary() {
         : [...profile.bookmarks, mangaSlug],
     };
     await updateProfile(nextProfile);
-  }
+  }, [profile, updateProfile]);
 
-  async function saveProgress(mangaSlug: string, chapterId: string, progress: number) {
+  const saveProgress = useCallback(async (mangaSlug: string, chapterId: string, progress: number) => {
+    const currentEntry = profile.readingHistory[mangaSlug];
+    if (currentEntry?.chapterId === chapterId && Math.abs((currentEntry.progress ?? 0) - progress) < 0.01) {
+      return;
+    }
+
     const nextProfile = {
       ...profile,
       readingHistory: {
@@ -59,9 +64,9 @@ export function useUserLibrary() {
       },
     };
     await updateProfile(nextProfile);
-  }
+  }, [profile, updateProfile]);
 
-  async function toggleLikedChapter(chapterId: string) {
+  const toggleLikedChapter = useCallback(async (chapterId: string) => {
     const hasLiked = profile.likedChapters.includes(chapterId);
     const nextProfile = {
       ...profile,
@@ -70,7 +75,7 @@ export function useUserLibrary() {
         : [...profile.likedChapters, chapterId],
     };
     await updateProfile(nextProfile);
-  }
+  }, [profile, updateProfile]);
 
   return {
     profile,
