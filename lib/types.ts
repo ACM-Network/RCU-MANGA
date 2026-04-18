@@ -33,16 +33,17 @@ export interface UserLibraryProfile {
   name: string;
   email: string;
   bookmarks: string[];
-  readingHistory: Record<
-    string,
-    {
-      mangaSlug: string;
-      chapterId: string;
-      progress: number;
-      updatedAt: string;
-    }
-  >;
+  readingHistory: Record<string, ReadingHistoryEntry>;
   likedChapters: string[];
+}
+
+export interface ReadingHistoryEntry {
+  mangaSlug: string;
+  chapterId: string;
+  panelIndex: number;
+  scrollOffset: number;
+  progress: number;
+  updatedAt: string;
 }
 
 export interface CommentRecord {

@@ -17,7 +17,14 @@ export function ContinueReading() {
         .map((entry) => {
           const manga = mangaLibrary.find((item) => item.slug === entry.mangaSlug);
           const chapter = manga?.chapters.find((candidate) => candidate.id === entry.chapterId);
-          return manga && chapter ? { manga, chapter, progress: entry.progress } : null;
+          return manga && chapter
+            ? {
+                manga,
+                chapter,
+                progress: entry.progress,
+                panelIndex: entry.panelIndex,
+              }
+            : null;
         })
         .filter(Boolean)
         .sort((a, b) => (b?.chapter.createdAt ?? "").localeCompare(a?.chapter.createdAt ?? "")),
@@ -57,6 +64,9 @@ export function ContinueReading() {
                 <h3 className="section-title text-2xl text-white">{entry!.manga.title}</h3>
                 <p className="mt-2 text-sm text-zinc-300">
                   {formatChapterNumber(entry!.chapter.number)} - {entry!.chapter.title}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.24em] text-zinc-500">
+                  Resume from panel {entry!.panelIndex + 1}
                 </p>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">

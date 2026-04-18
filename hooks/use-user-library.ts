@@ -45,9 +45,21 @@ export function useUserLibrary() {
     await updateProfile(nextProfile);
   }, [profile, updateProfile]);
 
-  const saveProgress = useCallback(async (mangaSlug: string, chapterId: string, progress: number) => {
+  const saveProgress = useCallback(
+    async (
+      mangaSlug: string,
+      chapterId: string,
+      panelIndex: number,
+      scrollOffset: number,
+      progress: number,
+    ) => {
     const currentEntry = profile.readingHistory[mangaSlug];
-    if (currentEntry?.chapterId === chapterId && Math.abs((currentEntry.progress ?? 0) - progress) < 0.01) {
+    if (
+      currentEntry?.chapterId === chapterId &&
+      currentEntry.panelIndex === panelIndex &&
+      Math.abs((currentEntry.scrollOffset ?? 0) - scrollOffset) < 24 &&
+      Math.abs((currentEntry.progress ?? 0) - progress) < 0.01
+    ) {
       return;
     }
 
@@ -58,13 +70,17 @@ export function useUserLibrary() {
         [mangaSlug]: {
           mangaSlug,
           chapterId,
+          panelIndex,
+          scrollOffset,
           progress,
           updatedAt: new Date().toISOString(),
         },
       },
     };
     await updateProfile(nextProfile);
-  }, [profile, updateProfile]);
+    },
+    [profile, updateProfile],
+  );
 
   const toggleLikedChapter = useCallback(async (chapterId: string) => {
     const hasLiked = profile.likedChapters.includes(chapterId);

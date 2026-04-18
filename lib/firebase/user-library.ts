@@ -3,7 +3,7 @@
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
-import type { UserLibraryProfile } from "@/lib/types";
+import type { ReadingHistoryEntry, UserLibraryProfile } from "@/lib/types";
 
 const storageKey = "rcpu-user-library";
 
@@ -16,10 +16,33 @@ export const emptyLibraryProfile: UserLibraryProfile = {
   likedChapters: [],
 };
 
+function normalizeReadingHistory(readingHistory: UserLibraryProfile["readingHistory"] | undefined) {
+  const entries = Object.entries(readingHistory ?? {});
+  return Object.fromEntries(
+    entries.map(([slug, entry]) => {
+      const normalizedEntry: ReadingHistoryEntry = {
+        mangaSlug: entry?.mangaSlug ?? slug,
+        chapterId: entry?.chapterId ?? "",
+        panelIndex: entry?.panelIndex ?? 0,
+        scrollOffset: entry?.scrollOffset ?? 0,
+        progress: entry?.progress ?? 0,
+        updatedAt: entry?.updatedAt ?? new Date(0).toISOString(),
+      };
+      return [slug, normalizedEntry];
+    }),
+  );
+}
+
 export function readLocalLibraryProfile() {
   if (typeof window === "undefined") return emptyLibraryProfile;
   const raw = window.localStorage.getItem(storageKey);
-  return raw ? ({ ...emptyLibraryProfile, ...JSON.parse(raw) } as UserLibraryProfile) : emptyLibraryProfile;
+  if (!raw) return emptyLibraryProfile;
+  const parsed = JSON.parse(raw) as UserLibraryProfile;
+  return {
+    ...emptyLibraryProfile,
+    ...parsed,
+    readingHistory: normalizeReadingHistory(parsed.readingHistory),
+  };
 }
 
 export function writeLocalLibraryProfile(profile: UserLibraryProfile) {
@@ -41,7 +64,7 @@ export function subscribeToUserLibrary(
         name: data?.name ?? "RCPU Reader",
         email: data?.email ?? "",
         bookmarks: data?.bookmarks ?? [],
-        readingHistory: data?.readingHistory ?? {},
+        readingHistory: normalizeReadingHistory(data?.readingHistory),
         likedChapters: data?.likedChapters ?? [],
       });
     });

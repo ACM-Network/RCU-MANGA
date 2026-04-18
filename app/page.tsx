@@ -1,3 +1,4 @@
+import { BecauseYouRead } from "@/components/home/because-you-read";
 import { ContinueReading } from "@/components/home/continue-reading";
 import { HeroBanner } from "@/components/home/hero-banner";
 import { PosterCard } from "@/components/manga/poster-card";
@@ -33,6 +34,15 @@ export default function HomePage() {
             <PosterCard key={entry.id} manga={entry} />
           ))}
         </div>
+      </section>
+
+      <section className="space-y-6">
+        <SectionHeading
+          eyebrow="Smart Picks"
+          title="Because You Read"
+          description="A first-pass recommendation rail built from your recent reading history, genre overlap, and universe affinity."
+        />
+        <BecauseYouRead />
       </section>
 
       <section className="space-y-6">
