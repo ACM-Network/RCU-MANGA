@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import "../styles/effects.css";
+
+:root {
+  --background: #05020b;
+  --background-elevated: rgba(15, 10, 24, 0.82);
+  --background-soft: rgba(24, 16, 38, 0.68);
+  --foreground: #f7f2ff;
+  --muted: #a89cb7;
+  --border: rgba(255, 255, 255, 0.08);
+  --purple: #6d28d9;
+  --purple-soft: #3b1364;
+  --red: #ff2b55;
+  --red-soft: rgba(255, 43, 85, 0.18);
+  --glow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(109, 40, 217, 0.16), transparent 25%),
+    radial-gradient(circle at 80% 10%, rgba(255, 43, 85, 0.18), transparent 25%),
+    radial-gradient(circle at 50% 100%, rgba(147, 51, 234, 0.1), transparent 30%),
+    linear-gradient(180deg, #040207 0%, #0a0512 48%, #040207 100%);
+  color: var(--foreground);
+  font-family: var(--font-body, "Segoe UI", sans-serif);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(255, 43, 85, 0.3);
+  color: white;
+}
+
+.font-display {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.page-shell {
+  position: relative;
+  overflow: clip;
+}
+
+.page-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 88px 88px;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(24px);
+  box-shadow: var(--glow);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #d9b8ff 45%, #ff5c7d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 43, 85, 0.7), rgba(109, 40, 217, 0.45), rgba(255, 255, 255, 0.15));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.section-title {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reader-mode {
+  background:
+    radial-gradient(circle at center, rgba(255, 43, 85, 0.08), transparent 28%),
+    linear-gradient(180deg, #030206 0%, #0a0613 100%);
+}
+
+.poster-shadow {
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.story-map-line {
+  background: linear-gradient(90deg, rgba(255, 43, 85, 0.4), rgba(109, 40, 217, 0.4));
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0) scale(1.04);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 43, 85, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 43, 85, 0.25);
+  }
+}
+
+.animate-drift {
+  animation: drift 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3.2s ease-in-out infinite;
+}

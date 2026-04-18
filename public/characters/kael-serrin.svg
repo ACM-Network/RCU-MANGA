@@ -1,0 +1,11 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" fill="#06030A"/>
+  <rect x="70" y="70" width="760" height="1060" rx="44" fill="#12091C"/>
+  <circle cx="580" cy="280" r="180" fill="#A855F7" fill-opacity="0.26"/>
+  <path d="M300 894C338 656 372 548 454 386C540 552 566 698 620 894" fill="#1A1320"/>
+  <circle cx="452" cy="340" r="110" fill="#F0D7CD"/>
+  <path d="M324 302C356 228 420 186 492 186C562 186 614 226 634 292C578 274 532 266 476 266C418 266 372 276 324 302Z" fill="#1C1224"/>
+  <path d="M190 460C320 420 590 388 700 430" stroke="#E9D5FF" stroke-width="10"/>
+  <text x="110" y="1012" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="84" letter-spacing="4">KAEL SERRIN</text>
+  <text x="112" y="1076" fill="#D8B4FE" font-family="Arial, sans-serif" font-size="28" letter-spacing="6">THREAD LISTENER</text>
+</svg>

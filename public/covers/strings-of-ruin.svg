@@ -1,0 +1,21 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="#05020B"/>
+  <rect x="100" y="110" width="1000" height="1380" rx="48" fill="url(#paint0_linear)"/>
+  <circle cx="610" cy="420" r="220" fill="#A855F7" fill-opacity="0.25"/>
+  <path d="M205 420C422 380 738 300 984 386" stroke="#C084FC" stroke-width="12"/>
+  <path d="M202 520C455 468 738 435 981 516" stroke="#F9A8D4" stroke-width="12"/>
+  <path d="M204 630C468 584 744 565 986 646" stroke="#FCA5A5" stroke-width="12"/>
+  <path d="M204 740C488 696 736 700 986 772" stroke="#DDD6FE" stroke-width="12"/>
+  <path d="M605 290L605 1020" stroke="#F5F3FF" stroke-opacity="0.4" stroke-width="16"/>
+  <circle cx="605" cy="975" r="94" stroke="#F5F3FF" stroke-width="14"/>
+  <text x="170" y="250" fill="#F8F5FF" font-family="Impact, Arial Black, sans-serif" font-size="70" letter-spacing="9">STRINGS UNIVERSE</text>
+  <text x="170" y="1180" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="148" letter-spacing="6">STRINGS</text>
+  <text x="170" y="1310" fill="#D8B4FE" font-family="Impact, Arial Black, sans-serif" font-size="148" letter-spacing="6">OF RUIN</text>
+  <text x="174" y="1394" fill="#D1C7E2" font-family="Arial, sans-serif" font-size="36" letter-spacing="8">FATE IS MUSIC. BREAK THE SONG, BREAK THE WORLD.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="100" y1="110" x2="1100" y2="1490" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#180C22"/>
+      <stop offset="1" stop-color="#07050C"/>
+    </linearGradient>
+  </defs>
+</svg>

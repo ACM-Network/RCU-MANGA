@@ -1,0 +1,14 @@
+<svg width="1400" height="2400" viewBox="0 0 1400 2400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="2400" fill="#06030B"/>
+  <rect x="80" y="80" width="1240" height="2240" rx="48" fill="url(#paint0_linear)"/>
+  <circle cx="990" cy="460" r="240" fill="#FF2B55" fill-opacity="0.24"/>
+  <path d="M170 1660C360 1500 500 1300 680 1020C810 820 920 620 1032 360" stroke="#FDBA74" stroke-width="28"/>
+  <text x="170" y="1940" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="130" letter-spacing="6">ZERO HOUR</text>
+  <text x="172" y="2050" fill="#D7CDE0" font-family="Arial, sans-serif" font-size="40" letter-spacing="8">A CITY WAITS FOR THE SUN TO MISS ITS CUE.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="80" y1="80" x2="1320" y2="2320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#120916"/>
+      <stop offset="1" stop-color="#08050D"/>
+    </linearGradient>
+  </defs>
+</svg>

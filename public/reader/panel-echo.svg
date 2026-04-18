@@ -1,0 +1,17 @@
+<svg width="1400" height="2400" viewBox="0 0 1400 2400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="2400" fill="#040208"/>
+  <rect x="80" y="80" width="1240" height="2240" rx="48" fill="url(#paint0_linear)"/>
+  <circle cx="706" cy="760" r="220" fill="#A855F7" fill-opacity="0.2"/>
+  <circle cx="706" cy="760" r="300" stroke="#E9D5FF" stroke-opacity="0.12" stroke-width="18"/>
+  <circle cx="706" cy="760" r="380" stroke="#FB7185" stroke-opacity="0.15" stroke-width="14"/>
+  <path d="M300 1530C518 1460 862 1464 1088 1530" stroke="#E9D5FF" stroke-width="14"/>
+  <path d="M276 1640C526 1562 874 1572 1120 1644" stroke="#FB7185" stroke-width="14"/>
+  <text x="170" y="1940" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="130" letter-spacing="6">ECHO</text>
+  <text x="172" y="2050" fill="#D7CDE0" font-family="Arial, sans-serif" font-size="40" letter-spacing="8">A MEMORY CAN KEEP SINGING AFTER THE ROOM DIES.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="80" y1="80" x2="1320" y2="2320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#110815"/>
+      <stop offset="1" stop-color="#050308"/>
+    </linearGradient>
+  </defs>
+</svg>

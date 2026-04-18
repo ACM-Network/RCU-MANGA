@@ -1,0 +1,15 @@
+<svg width="1400" height="2400" viewBox="0 0 1400 2400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="2400" fill="#05020A"/>
+  <rect x="80" y="80" width="1240" height="2240" rx="48" fill="url(#paint0_linear)"/>
+  <circle cx="700" cy="940" r="260" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="24"/>
+  <path d="M690 360C726 762 724 1144 644 1554C616 1702 570 1830 516 1944" stroke="#C084FC" stroke-width="26" stroke-linecap="round"/>
+  <path d="M808 392C762 768 770 1168 862 1590C896 1742 960 1842 1048 1938" stroke="#FF2B55" stroke-width="26" stroke-linecap="round"/>
+  <text x="170" y="1940" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="130" letter-spacing="6">THE RIFT</text>
+  <text x="172" y="2050" fill="#D7CDE0" font-family="Arial, sans-serif" font-size="40" letter-spacing="8">SPLIT THE NOTE. SPLIT THE WORLD.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="80" y1="80" x2="1320" y2="2320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#120915"/>
+      <stop offset="1" stop-color="#07040B"/>
+    </linearGradient>
+  </defs>
+</svg>

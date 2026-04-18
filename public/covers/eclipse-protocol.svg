@@ -1,0 +1,20 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="#040207"/>
+  <circle cx="930" cy="280" r="240" fill="#7C3AED" fill-opacity="0.35"/>
+  <circle cx="760" cy="450" r="180" fill="#FF2B55" fill-opacity="0.35"/>
+  <rect x="110" y="120" width="980" height="1360" rx="48" fill="url(#paint0_linear)"/>
+  <circle cx="780" cy="470" r="170" fill="#0B0813"/>
+  <circle cx="780" cy="470" r="122" stroke="#FF2B55" stroke-width="18"/>
+  <path d="M210 1180C420 990 559 821 706 542" stroke="#FF2B55" stroke-opacity="0.75" stroke-width="24"/>
+  <path d="M302 1320C520 1180 700 980 894 612" stroke="#A855F7" stroke-opacity="0.7" stroke-width="18"/>
+  <text x="180" y="260" fill="#F8F5FF" font-family="Impact, Arial Black, sans-serif" font-size="78" letter-spacing="10">RCPU</text>
+  <text x="180" y="1110" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="152" letter-spacing="8">ECLIPSE</text>
+  <text x="180" y="1240" fill="#F87171" font-family="Impact, Arial Black, sans-serif" font-size="152" letter-spacing="8">PROTOCOL</text>
+  <text x="182" y="1320" fill="#C8BDD9" font-family="Arial, sans-serif" font-size="38" letter-spacing="8">WHEN THE SKY GOES BLACK, EVERY CITY BURNS BRIGHTER.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="110" y1="120" x2="1090" y2="1480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#140816"/>
+      <stop offset="1" stop-color="#09050D"/>
+    </linearGradient>
+  </defs>
+</svg>

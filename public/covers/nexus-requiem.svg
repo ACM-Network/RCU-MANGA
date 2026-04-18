@@ -1,0 +1,20 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="#030206"/>
+  <rect x="110" y="120" width="980" height="1360" rx="48" fill="url(#paint0_linear)"/>
+  <path d="M222 420H978" stroke="#F43F5E" stroke-width="18"/>
+  <path d="M222 520H978" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="8"/>
+  <path d="M222 630H978" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="8"/>
+  <path d="M222 740H978" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="8"/>
+  <rect x="320" y="360" width="560" height="520" rx="34" stroke="#F43F5E" stroke-width="18"/>
+  <circle cx="600" cy="620" r="120" stroke="#F43F5E" stroke-width="18"/>
+  <text x="170" y="246" fill="#F8F5FF" font-family="Impact, Arial Black, sans-serif" font-size="80" letter-spacing="10">NEXUS DOSSIER</text>
+  <text x="170" y="1130" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="148" letter-spacing="6">NEXUS</text>
+  <text x="170" y="1260" fill="#FB7185" font-family="Impact, Arial Black, sans-serif" font-size="148" letter-spacing="6">REQUIEM</text>
+  <text x="170" y="1348" fill="#CEC6D9" font-family="Arial, sans-serif" font-size="36" letter-spacing="8">THE AGENCY THAT SAVES REALITY HAS ALREADY MOURNED IT.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="110" y1="120" x2="1090" y2="1480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#120811"/>
+      <stop offset="1" stop-color="#050308"/>
+    </linearGradient>
+  </defs>
+</svg>

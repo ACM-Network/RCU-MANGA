@@ -1,0 +1,10 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" fill="#050308"/>
+  <rect x="70" y="70" width="760" height="1060" rx="44" fill="#110913"/>
+  <rect x="176" y="196" width="548" height="520" rx="32" stroke="#F43F5E" stroke-width="12"/>
+  <path d="M308 914C330 724 364 612 446 420C540 618 574 734 608 914" fill="#161018"/>
+  <circle cx="446" cy="364" r="110" fill="#F5DDCF"/>
+  <path d="M336 324C356 254 412 216 486 216C544 216 596 254 614 304C564 286 516 282 474 282C414 282 374 290 336 324Z" fill="#171017"/>
+  <text x="112" y="1012" fill="#FFFFFF" font-family="Impact, Arial Black, sans-serif" font-size="86" letter-spacing="4">SOL ARDEN</text>
+  <text x="114" y="1076" fill="#FDA4AF" font-family="Arial, sans-serif" font-size="28" letter-spacing="6">DIRECTOR OF NEXUS</text>
+</svg>
