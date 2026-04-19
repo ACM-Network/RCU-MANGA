@@ -47,6 +47,7 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
 
   return (
     <ChapterReaderClient
+      key={result.chapter.id}
       manga={result.manga}
       chapter={result.chapter}
       previous={result.previous}

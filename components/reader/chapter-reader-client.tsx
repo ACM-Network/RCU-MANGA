@@ -2,11 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ReaderChrome } from "@/components/reader/reader-chrome";
 import { ReaderPanel } from "@/components/reader/reader-panel";
-import { Button } from "@/components/ui/button";
 import { useUserLibrary } from "@/hooks/use-user-library";
 import type { Chapter, Manga } from "@/lib/types";
 
@@ -38,6 +37,8 @@ export function ChapterReaderClient({
   const [cinematic, setCinematic] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentPanel, setCurrentPanel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const audioRef = useRef<AudioContext | null>(null);
   const gainRef = useRef<GainNode | null>(null);
   const lastSavedIndexRef = useRef(-1);
@@ -58,13 +59,18 @@ export function ChapterReaderClient({
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
         if (!visible) return;
 
         const index = Number((visible.target as HTMLElement).dataset.panelIndex ?? 0);
         if (lastSavedIndexRef.current === index) return;
+
         lastSavedIndexRef.current = index;
         const nextProgress = (index + 1) / chapter.images.length;
+
+        setCurrentPanel(index + 1);
         setProgress(nextProgress);
+
         void saveProgress(
           manga.slug,
           chapter.id,
@@ -85,7 +91,10 @@ export function ChapterReaderClient({
 
   useEffect(() => {
     if (!musicOn) {
-      gainRef.current?.gain.linearRampToValueAtTime(0.0001, (audioRef.current?.currentTime ?? 0) + 0.2);
+      gainRef.current?.gain.linearRampToValueAtTime(
+        0.0001,
+        (audioRef.current?.currentTime ?? 0) + 0.2,
+      );
       return;
     }
 
@@ -93,16 +102,19 @@ export function ChapterReaderClient({
       window.AudioContext ||
       (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext })
         .webkitAudioContext;
+
     if (!audioRef.current) {
       const context = new AudioContextClass();
       const oscillator = context.createOscillator();
       const gain = context.createGain();
+
       oscillator.type = "sawtooth";
       oscillator.frequency.value = 55;
       gain.gain.value = 0.0001;
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
+
       audioRef.current = context;
       gainRef.current = gain;
     }
@@ -129,15 +141,9 @@ export function ChapterReaderClient({
     profile.readingHistory[manga.slug]?.chapterId === chapter.id
       ? profile.readingHistory[manga.slug]?.scrollOffset ?? 0
       : 0;
-  const displayedProgress = Math.max(progress, savedProgress);
-
-  useEffect(() => {
-    lastSavedIndexRef.current = Math.max(-1, Math.floor(savedProgress * chapter.images.length) - 1);
-  }, [chapter.id, chapter.images.length, savedProgress]);
-
-  useEffect(() => {
-    hasRestoredPositionRef.current = false;
-  }, [chapter.id]);
+  const displayedProgress = progress > 0 ? Math.max(progress, savedProgress) : savedProgress;
+  const displayedPanel =
+    progress > 0 ? currentPanel : Math.min(chapter.images.length, Math.max(1, savedPanelIndex + 1));
 
   useEffect(() => {
     if (hasRestoredPositionRef.current) return;
@@ -158,7 +164,7 @@ export function ChapterReaderClient({
     return () => window.cancelAnimationFrame(restore);
   }, [savedPanelIndex, savedScrollOffset]);
 
-  async function toggleFullscreen() {
+  const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
 
     if (document.fullscreenElement) {
@@ -169,47 +175,71 @@ export function ChapterReaderClient({
 
     await containerRef.current.requestFullscreen();
     setCinematic(true);
-  }
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel((current) => Math.min(1.2, Number((current + 0.1).toFixed(2))));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel((current) => Math.max(0.9, Number((current - 0.1).toFixed(2))));
+  }, []);
+
+  const handleZoomReset = useCallback(() => {
+    setZoomLevel(1);
+  }, []);
+
+  const readerWidth = useMemo(
+    () => `${Math.round(42 + (zoomLevel - 0.9) * 42)}rem`,
+    [zoomLevel],
+  );
 
   return (
-    <div ref={containerRef} className="reader-mode min-h-screen">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-6 sm:px-6 lg:py-8">
+    <div ref={containerRef} className="reader-mode min-h-screen overscroll-y-contain">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
         <ReaderChrome
           manga={manga}
           chapter={chapter}
           progress={displayedProgress}
+          currentPanel={displayedPanel}
+          totalPanels={chapter.images.length}
+          zoomLevel={zoomLevel}
+          cinematic={cinematic}
+          musicOn={musicOn}
+          isLiked={isLiked}
           next={next}
           onBack={() => window.history.back()}
+          onToggleFullscreen={() => void toggleFullscreen()}
+          onToggleMusic={() => setMusicOn((current) => !current)}
+          onToggleLike={() => void toggleLikedChapter(chapter.id)}
+          onZoomOut={handleZoomOut}
+          onZoomIn={handleZoomIn}
+          onZoomReset={handleZoomReset}
         />
 
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={() => void toggleLikedChapter(chapter.id)}>
-            {isLiked ? "Unlike Chapter" : "Like Chapter"}
-          </Button>
-          <Button variant="secondary" onClick={() => setMusicOn((current) => !current)}>
-            {musicOn ? "Music Off" : "Music On"}
-          </Button>
-          <Button onClick={() => void toggleFullscreen()}>
-            {cinematic ? "Exit Cinematic" : "Cinematic Mode"}
-          </Button>
+        <div className="mx-auto w-full" style={{ maxWidth: readerWidth }}>
+          <div className="mb-4 rounded-[24px] border border-white/7 bg-black/32 px-4 py-3 text-sm leading-6 text-zinc-300 sm:px-5">
+            Vertical reading is optimized for quick resume and low-memory scrolling. Your last
+            panel is saved automatically on this device.
+          </div>
+
+          <div className="space-y-4 sm:space-y-5">
+            {chapter.images.map((image, index) => (
+              <ReaderPanel
+                key={`${chapter.id}-${image}-${index}`}
+                index={index}
+                src={image}
+                alt={`${manga.title} ${chapter.title} panel ${index + 1}`}
+                priority={index === 0}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="space-y-5">
-          {chapter.images.map((image, index) => (
-            <ReaderPanel
-              key={`${chapter.id}-${image}-${index}`}
-              index={index}
-              src={image}
-              alt={`${manga.title} ${chapter.title} panel ${index + 1}`}
-              priority={index === 0}
-            />
-          ))}
-        </div>
-
-        <div className="grid gap-4 rounded-[30px] border border-white/8 bg-white/[0.03] p-5 sm:grid-cols-3 sm:p-6">
+        <div className="grid gap-3 rounded-[26px] border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-3 sm:gap-4 sm:p-5">
           <Link
             href={`/manga/${manga.slug}`}
-            className="rounded-[24px] border border-white/8 bg-black/30 p-5 transition hover:bg-white/5"
+            className="rounded-[22px] border border-white/8 bg-black/30 p-4 transition hover:bg-white/5 sm:p-5"
           >
             <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Browse</p>
             <p className="mt-2 section-title text-2xl text-white">Back to Library</p>
@@ -218,13 +248,13 @@ export function ChapterReaderClient({
           {previous ? (
             <Link
               href={`/manga/${manga.slug}/chapter/${previous.id}`}
-              className="rounded-[24px] border border-white/8 bg-black/30 p-5 transition hover:bg-white/5"
+              className="rounded-[22px] border border-white/8 bg-black/30 p-4 transition hover:bg-white/5 sm:p-5"
             >
               <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Previous</p>
               <p className="mt-2 section-title text-2xl text-white">{previous.title}</p>
             </Link>
           ) : (
-            <div className="rounded-[24px] border border-dashed border-white/8 p-5 text-zinc-400">
+            <div className="rounded-[22px] border border-dashed border-white/8 p-4 text-zinc-400 sm:p-5">
               Beginning of this manga run.
             </div>
           )}
@@ -232,13 +262,13 @@ export function ChapterReaderClient({
           {next ? (
             <Link
               href={`/manga/${manga.slug}/chapter/${next.id}`}
-              className="rounded-[24px] border border-rose-500/20 bg-rose-500/8 p-5 transition hover:bg-rose-500/12"
+              className="rounded-[22px] border border-rose-500/20 bg-rose-500/8 p-4 transition hover:bg-rose-500/12 sm:p-5"
             >
               <p className="text-xs uppercase tracking-[0.24em] text-rose-300">Next Chapter</p>
               <p className="mt-2 section-title text-2xl text-white">{next.title}</p>
             </Link>
           ) : (
-            <div className="rounded-[24px] border border-dashed border-white/8 p-5 text-zinc-400">
+            <div className="rounded-[22px] border border-dashed border-white/8 p-4 text-zinc-400 sm:p-5">
               Latest available chapter. Check the library for fresh drops.
             </div>
           )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -12,7 +13,7 @@ interface ReaderPanelProps {
   index: number;
 }
 
-export function ReaderPanel({ src, alt, priority = false, index }: ReaderPanelProps) {
+function ReaderPanelComponent({ src, alt, priority = false, index }: ReaderPanelProps) {
   const [visible, setVisible] = useState(priority);
   const [loaded, setLoaded] = useState(false);
   const figureRef = useRef<HTMLElement | null>(null);
@@ -40,12 +41,14 @@ export function ReaderPanel({ src, alt, priority = false, index }: ReaderPanelPr
       ref={figureRef}
       data-panel-index={index}
       className={cn(
-        "overflow-hidden rounded-[32px] border border-white/8 bg-black/40 transition-all duration-700",
+        "overflow-hidden rounded-[26px] border border-white/8 bg-black/40 shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition-all duration-500 sm:rounded-[32px]",
         visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0",
       )}
     >
-      <div className="relative">
-        {!loaded ? <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-white/5 to-transparent" /> : null}
+      <div className="relative bg-black/30">
+        {!loaded ? (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-white/5 via-white/[0.03] to-transparent" />
+        ) : null}
         <Image
           src={src}
           alt={alt}
@@ -55,7 +58,7 @@ export function ReaderPanel({ src, alt, priority = false, index }: ReaderPanelPr
           loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 768px) 100vw, 920px"
           className={cn(
-            "h-auto w-full object-cover transition duration-700",
+            "h-auto w-full object-cover transition duration-500",
             loaded ? "scale-100 opacity-100" : "scale-[1.015] opacity-0",
           )}
           onLoad={() => setLoaded(true)}
@@ -64,3 +67,5 @@ export function ReaderPanel({ src, alt, priority = false, index }: ReaderPanelPr
     </figure>
   );
 }
+
+export const ReaderPanel = memo(ReaderPanelComponent);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -14,15 +14,18 @@ export function useUserLibrary() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserLibraryProfile>(emptyLibraryProfile);
   const [loading, setLoading] = useState(true);
+  const profileRef = useRef<UserLibraryProfile>(emptyLibraryProfile);
 
   useEffect(() => {
     const unsubscribe = subscribeToUserLibrary(user?.uid ?? null, (nextProfile) => {
-      setProfile({
+      const mergedProfile = {
         ...nextProfile,
         id: user?.uid ?? nextProfile.id,
         name: user?.displayName ?? nextProfile.name,
         email: user?.email ?? nextProfile.email,
-      });
+      };
+      profileRef.current = mergedProfile;
+      setProfile(mergedProfile);
       setLoading(false);
     });
 
@@ -30,20 +33,22 @@ export function useUserLibrary() {
   }, [user?.displayName, user?.email, user?.uid]);
 
   const updateProfile = useCallback(async (nextProfile: UserLibraryProfile) => {
+    profileRef.current = nextProfile;
     setProfile(nextProfile);
     await persistUserLibrary(nextProfile);
   }, []);
 
   const toggleBookmark = useCallback(async (mangaSlug: string) => {
-    const isBookmarked = profile.bookmarks.includes(mangaSlug);
+    const currentProfile = profileRef.current;
+    const isBookmarked = currentProfile.bookmarks.includes(mangaSlug);
     const nextProfile = {
-      ...profile,
+      ...currentProfile,
       bookmarks: isBookmarked
-        ? profile.bookmarks.filter((entry) => entry !== mangaSlug)
-        : [...profile.bookmarks, mangaSlug],
+        ? currentProfile.bookmarks.filter((entry) => entry !== mangaSlug)
+        : [...currentProfile.bookmarks, mangaSlug],
     };
     await updateProfile(nextProfile);
-  }, [profile, updateProfile]);
+  }, [updateProfile]);
 
   const saveProgress = useCallback(
     async (
@@ -53,45 +58,48 @@ export function useUserLibrary() {
       scrollOffset: number,
       progress: number,
     ) => {
-    const currentEntry = profile.readingHistory[mangaSlug];
-    if (
-      currentEntry?.chapterId === chapterId &&
-      currentEntry.panelIndex === panelIndex &&
-      Math.abs((currentEntry.scrollOffset ?? 0) - scrollOffset) < 24 &&
-      Math.abs((currentEntry.progress ?? 0) - progress) < 0.01
-    ) {
-      return;
-    }
+      const currentProfile = profileRef.current;
+      const currentEntry = currentProfile.readingHistory[mangaSlug];
 
-    const nextProfile = {
-      ...profile,
-      readingHistory: {
-        ...profile.readingHistory,
-        [mangaSlug]: {
-          mangaSlug,
-          chapterId,
-          panelIndex,
-          scrollOffset,
-          progress,
-          updatedAt: new Date().toISOString(),
+      if (
+        currentEntry?.chapterId === chapterId &&
+        currentEntry.panelIndex === panelIndex &&
+        Math.abs((currentEntry.scrollOffset ?? 0) - scrollOffset) < 24 &&
+        Math.abs((currentEntry.progress ?? 0) - progress) < 0.01
+      ) {
+        return;
+      }
+
+      const nextProfile = {
+        ...currentProfile,
+        readingHistory: {
+          ...currentProfile.readingHistory,
+          [mangaSlug]: {
+            mangaSlug,
+            chapterId,
+            panelIndex,
+            scrollOffset,
+            progress,
+            updatedAt: new Date().toISOString(),
+          },
         },
-      },
-    };
-    await updateProfile(nextProfile);
+      };
+      await updateProfile(nextProfile);
     },
-    [profile, updateProfile],
+    [updateProfile],
   );
 
   const toggleLikedChapter = useCallback(async (chapterId: string) => {
-    const hasLiked = profile.likedChapters.includes(chapterId);
+    const currentProfile = profileRef.current;
+    const hasLiked = currentProfile.likedChapters.includes(chapterId);
     const nextProfile = {
-      ...profile,
+      ...currentProfile,
       likedChapters: hasLiked
-        ? profile.likedChapters.filter((entry) => entry !== chapterId)
-        : [...profile.likedChapters, chapterId],
+        ? currentProfile.likedChapters.filter((entry) => entry !== chapterId)
+        : [...currentProfile.likedChapters, chapterId],
     };
     await updateProfile(nextProfile);
-  }, [profile, updateProfile]);
+  }, [updateProfile]);
 
   return {
     profile,

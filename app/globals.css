@@ -21,6 +21,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -33,11 +34,16 @@ body {
     linear-gradient(180deg, #030206 0%, #09040f 48%, #030206 100%);
   color: var(--foreground);
   font-family: var(--font-body, "Trebuchet MS", "Segoe UI", sans-serif);
+  text-rendering: optimizeLegibility;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+img {
+  display: block;
 }
 
 button,
@@ -127,6 +133,21 @@ select {
     linear-gradient(180deg, #030206 0%, #0a0613 100%);
 }
 
+.section-shell {
+  position: relative;
+  padding-top: 0.25rem;
+}
+
+.section-shell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+}
+
 .poster-shadow {
   box-shadow:
     0 14px 34px rgba(0, 0, 0, 0.45),
@@ -172,4 +193,25 @@ select {
 
 .animate-pulse-glow {
   animation: pulseGlow 3.2s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 88px;
+  }
+
+  .section-title {
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-drift,
+  .animate-pulse-glow {
+    animation: none;
+  }
 }

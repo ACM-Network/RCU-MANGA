@@ -23,11 +23,12 @@ export function ContinueReading() {
                 chapter,
                 progress: entry.progress,
                 panelIndex: entry.panelIndex,
+                updatedAt: entry.updatedAt,
               }
             : null;
         })
         .filter(Boolean)
-        .sort((a, b) => (b?.chapter.createdAt ?? "").localeCompare(a?.chapter.createdAt ?? "")),
+        .sort((a, b) => (b?.updatedAt ?? "").localeCompare(a?.updatedAt ?? "")),
     [profile.readingHistory],
   );
 
@@ -66,7 +67,7 @@ export function ContinueReading() {
                   {formatChapterNumber(entry!.chapter.number)} - {entry!.chapter.title}
                 </p>
                 <p className="mt-2 text-xs uppercase tracking-[0.24em] text-zinc-500">
-                  Resume from panel {entry!.panelIndex + 1}
+                  Resume at panel {entry!.panelIndex + 1}
                 </p>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -80,7 +81,7 @@ export function ContinueReading() {
         ))
       ) : (
         <div className="panel rounded-[28px] p-6 text-zinc-300 md:col-span-2 xl:col-span-3">
-          Start a chapter and your progress will appear here with cross-page sync through Firebase or local demo persistence.
+          Start a chapter and your last read position will show up here automatically.
         </div>
       )}
     </div>

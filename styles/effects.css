@@ -1,23 +1,36 @@
 .card-hover {
   transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    background-color 220ms ease,
-    box-shadow 220ms ease,
-    filter 220ms ease;
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+  will-change: transform;
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px) scale(1.01);
   border-color: rgba(255, 43, 85, 0.35);
   box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.35),
+    0 18px 34px rgba(0, 0, 0, 0.32),
     0 0 0 1px rgba(255, 43, 85, 0.18),
-    0 0 28px rgba(255, 43, 85, 0.12);
-  filter: saturate(1.06);
+    0 0 22px rgba(255, 43, 85, 0.1);
+  filter: saturate(1.04);
 }
 
 .film-fade {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.58) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover {
+    transition: border-color 0.01ms linear, background-color 0.01ms linear;
+    will-change: auto;
+  }
+
+  .card-hover:hover {
+    transform: none;
+    filter: none;
+  }
 }

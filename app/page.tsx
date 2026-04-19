@@ -14,7 +14,7 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl space-y-14 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
       <HeroBanner manga={featured} />
 
-      <section className="space-y-6">
+      <section className="section-shell space-y-6">
         <SectionHeading
           eyebrow="For You"
           title="Continue Reading"
@@ -23,7 +23,7 @@ export default function HomePage() {
         <ContinueReading />
       </section>
 
-      <section className="space-y-6">
+      <section className="section-shell space-y-6">
         <SectionHeading
           eyebrow="Momentum"
           title="Trending Manga"
@@ -36,7 +36,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="space-y-6">
+      <section className="section-shell space-y-6">
         <SectionHeading
           eyebrow="Smart Picks"
           title="Because You Read"
@@ -45,7 +45,7 @@ export default function HomePage() {
         <BecauseYouRead />
       </section>
 
-      <section className="space-y-6">
+      <section className="section-shell space-y-6">
         <SectionHeading
           eyebrow="Fresh Drops"
           title="Latest Updates"
