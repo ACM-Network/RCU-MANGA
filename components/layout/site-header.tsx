@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -18,17 +19,32 @@ export function SiteHeader() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/6 bg-black/45 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/6 bg-black/45 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-fuchsia-700 text-sm font-black tracking-[0.22em] text-white shadow-[0_0_24px_rgba(255,49,93,0.25)]">
-            RCPU
-          </div>
-          <div>
-            <p className="section-title text-base text-white">Realm Cinematic</p>
-            <p className="text-xs uppercase tracking-[0.36em] text-zinc-400">Publishing Universe</p>
-          </div>
-        </Link>
+ <Link href="/" className="flex items-center gap-3 group">
+  <div className="relative">
+    <Image
+      src="/rcpu-logo.png"
+      alt="RCPU Logo"
+      width={44}
+      height={44}
+      className="rounded-xl relative z-10 transition duration-300 group-hover:scale-110"
+    />
+
+    {/* Glow */}
+    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-pink-500/40 via-purple-500/30 to-cyan-500/40 blur-lg opacity-70"></div>
+  </div>
+
+  {/* TEXT BLOCK */}
+  <div className="flex flex-col leading-tight">
+    <p className="section-title text-base text-white transition group-hover:text-pink-400">
+      Realm Cinematic
+    </p>
+    <p className="text-xs uppercase tracking-[0.36em] text-zinc-400">
+      Universe
+    </p>
+  </div>
+</Link>
 
         <nav className="hide-scrollbar flex items-center gap-2 overflow-x-auto">
           {links.map((link) => {
