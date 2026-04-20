@@ -24,8 +24,8 @@ export function SiteHeader() {
  <Link href="/" className="flex items-center gap-3 group">
   <div className="relative">
     <Image
-      src="/rcpu-logo.png"
-      alt="RCPU Logo"
+      src="/rcu-logo.png"
+      alt="RCU Logo"
       width={44}
       height={44}
       className="rounded-xl relative z-10 transition duration-300 group-hover:scale-110"
