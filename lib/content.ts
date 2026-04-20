@@ -15,18 +15,18 @@ export const mangaLibrary: Manga[] = mangaMetadata.map((metadata) => ({
 
 export const timelineEvents: TimelineEvent[] = [
   {
-    year: "2041",
-    title: "NEXUS is Founded",
+    year: "2028",
+    title: "Era Of Stings",
     description:
-      "A private emergency coalition forms after the first recorded anomaly storm fractures public communications.",
-    stories: ["Nexus Requiem"],
+      "Love may born any different ways but a true love bonds with KARMA",
+    stories: ["Strings Of You"],
   },
   {
-    year: "2046",
-    title: "The First Veil Ignition",
+    year: "1998",
+    title: "The Rise Of Shadows",
     description:
-      "Spiritual gatekeepers document an energy bloom identical to the signatures later seen in the eclipse engine.",
-    stories: ["Ember Veil"],
+      "childhood is a memory if it got cursed there will be only SHADOWS",
+    stories: ["Shadow Knight"],
   },
   {
     year: "2050",
