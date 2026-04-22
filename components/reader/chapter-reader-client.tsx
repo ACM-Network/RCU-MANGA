@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ReaderChrome } from "@/components/reader/reader-chrome";
@@ -27,25 +28,63 @@ interface ChapterReaderClientProps {
   next: Chapter | null;
 }
 
+interface LocalReaderProgress {
+  mangaSlug: string;
+  chapterId: string;
+  panelIndex: number;
+  scrollOffset: number;
+  progress: number;
+}
+
+function clampProgress(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest("input, textarea, select, button, a, [contenteditable='true']"));
+}
+
 export function ChapterReaderClient({
   manga,
   chapter,
   previous,
   next,
 }: ChapterReaderClientProps) {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [cinematic, setCinematic] = useState(false);
-  const [musicOn, setMusicOn] = useState(false);
+  const currentPanelRef = useRef(1);
+  const lastSavedIndexRef = useRef(-1);
+  const hasRestoredPositionRef = useRef(false);
   const [progress, setProgress] = useState(0);
   const [currentPanel, setCurrentPanel] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const audioRef = useRef<AudioContext | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
-  const lastSavedIndexRef = useRef(-1);
-  const hasRestoredPositionRef = useRef(false);
-  const { profile, saveProgress, toggleLikedChapter } = useUserLibrary();
+  const [showNextCta, setShowNextCta] = useState(false);
+  const { profile, saveProgress } = useUserLibrary();
 
-  const isLiked = profile.likedChapters.includes(chapter.id);
+  const localProgressKey = useMemo(
+    () => `rcpu-reader-progress:${manga.slug}:${chapter.id}`,
+    [chapter.id, manga.slug],
+  );
+
+  const writeLocalProgress = useCallback(
+    (entry: LocalReaderProgress) => {
+      window.localStorage.setItem(localProgressKey, JSON.stringify(entry));
+    },
+    [localProgressKey],
+  );
+
+  const readLocalProgress = useCallback(() => {
+    const raw = window.localStorage.getItem(localProgressKey);
+    if (!raw) return null;
+
+    try {
+      const parsed = JSON.parse(raw) as LocalReaderProgress;
+      return parsed.mangaSlug === manga.slug && parsed.chapterId === chapter.id ? parsed : null;
+    } catch {
+      return null;
+    }
+  }, [chapter.id, localProgressKey, manga.slug]);
 
   useEffect(() => {
     const targets = Array.from(
@@ -66,10 +105,11 @@ export function ChapterReaderClient({
         if (lastSavedIndexRef.current === index) return;
 
         lastSavedIndexRef.current = index;
-        const nextProgress = (index + 1) / chapter.images.length;
+        currentPanelRef.current = index + 1;
+        const nextProgress = clampProgress((index + 1) / chapter.images.length);
 
         setCurrentPanel(index + 1);
-        setProgress(nextProgress);
+        setProgress((current) => (Math.abs(current - nextProgress) > 0.005 ? nextProgress : current));
 
         void saveProgress(
           manga.slug,
@@ -89,46 +129,6 @@ export function ChapterReaderClient({
     return () => observer.disconnect();
   }, [chapter.id, chapter.images.length, manga.slug, saveProgress]);
 
-  useEffect(() => {
-    if (!musicOn) {
-      gainRef.current?.gain.linearRampToValueAtTime(
-        0.0001,
-        (audioRef.current?.currentTime ?? 0) + 0.2,
-      );
-      return;
-    }
-
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-
-    if (!audioRef.current) {
-      const context = new AudioContextClass();
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-
-      oscillator.type = "sawtooth";
-      oscillator.frequency.value = 55;
-      gain.gain.value = 0.0001;
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-
-      audioRef.current = context;
-      gainRef.current = gain;
-    }
-
-    void audioRef.current.resume();
-    gainRef.current?.gain.linearRampToValueAtTime(0.03, audioRef.current.currentTime + 0.4);
-  }, [musicOn]);
-
-  useEffect(() => {
-    const syncMode = () => setCinematic(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", syncMode);
-    return () => document.removeEventListener("fullscreenchange", syncMode);
-  }, []);
-
   const savedProgress =
     profile.readingHistory[manga.slug]?.chapterId === chapter.id
       ? profile.readingHistory[manga.slug]?.progress ?? 0
@@ -141,41 +141,90 @@ export function ChapterReaderClient({
     profile.readingHistory[manga.slug]?.chapterId === chapter.id
       ? profile.readingHistory[manga.slug]?.scrollOffset ?? 0
       : 0;
-  const displayedProgress = progress > 0 ? Math.max(progress, savedProgress) : savedProgress;
-  const displayedPanel =
-    progress > 0 ? currentPanel : Math.min(chapter.images.length, Math.max(1, savedPanelIndex + 1));
+
+  useEffect(() => {
+    let frame = 0;
+    let lastWrite = 0;
+
+    const updateScrollProgress = () => {
+      frame = 0;
+      const node = containerRef.current;
+      if (!node) return;
+
+      const start = node.offsetTop;
+      const end = start + node.scrollHeight - window.innerHeight;
+      const nextProgress = clampProgress((window.scrollY - start) / Math.max(1, end - start));
+      const scrollOffset = Math.max(0, Math.round(window.scrollY));
+
+      setProgress((current) => (Math.abs(current - nextProgress) > 0.005 ? nextProgress : current));
+      setShowNextCta(nextProgress > 0.96);
+
+      const now = window.performance.now();
+      if (now - lastWrite > 800) {
+        lastWrite = now;
+        writeLocalProgress({
+          mangaSlug: manga.slug,
+          chapterId: chapter.id,
+          panelIndex: Math.max(0, currentPanelRef.current - 1),
+          scrollOffset,
+          progress: nextProgress,
+        });
+      }
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateScrollProgress);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [chapter.id, manga.slug, writeLocalProgress]);
 
   useEffect(() => {
     if (hasRestoredPositionRef.current) return;
-    if (!savedScrollOffset && savedPanelIndex === 0) return;
 
     const restore = window.requestAnimationFrame(() => {
+      const localProgress = readLocalProgress();
+      const panelIndex = localProgress?.panelIndex ?? savedPanelIndex;
+      const scrollOffset = localProgress?.scrollOffset ?? savedScrollOffset;
+
+      if (!scrollOffset && panelIndex === 0) return;
+
       const targetPanel = containerRef.current?.querySelector<HTMLElement>(
-        `[data-panel-index="${savedPanelIndex}"]`,
+        `[data-panel-index="${panelIndex}"]`,
       );
 
-      if (targetPanel) {
-        const top = Math.max(savedScrollOffset || targetPanel.offsetTop - 120, 0);
-        window.scrollTo({ top, behavior: "auto" });
-        hasRestoredPositionRef.current = true;
-      }
+      const top = Math.max(scrollOffset || (targetPanel?.offsetTop ?? 0) - 120, 0);
+      window.scrollTo({ top, behavior: "auto" });
+      hasRestoredPositionRef.current = true;
     });
 
     return () => window.cancelAnimationFrame(restore);
-  }, [savedPanelIndex, savedScrollOffset]);
+  }, [readLocalProgress, savedPanelIndex, savedScrollOffset]);
 
-  const toggleFullscreen = useCallback(async () => {
-    if (!containerRef.current) return;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isEditableTarget(event.target)) return;
 
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      setCinematic(false);
-      return;
-    }
+      if (event.key === "ArrowRight" && next) {
+        event.preventDefault();
+        router.push(`/manga/${manga.slug}/chapter/${next.id}`);
+      }
 
-    await containerRef.current.requestFullscreen();
-    setCinematic(true);
-  }, []);
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        router.push(previous ? `/manga/${manga.slug}/chapter/${previous.id}` : `/manga/${manga.slug}`);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [manga.slug, next, previous, router]);
 
   const handleZoomIn = useCallback(() => {
     setZoomLevel((current) => Math.min(1.2, Number((current + 0.1).toFixed(2))));
@@ -189,6 +238,9 @@ export function ChapterReaderClient({
     setZoomLevel(1);
   }, []);
 
+  const displayedProgress = progress > 0 ? Math.max(progress, savedProgress) : savedProgress;
+  const displayedPanel =
+    progress > 0 ? currentPanel : Math.min(chapter.images.length, Math.max(1, savedPanelIndex + 1));
   const readerWidth = useMemo(
     () => `${Math.round(42 + (zoomLevel - 0.9) * 42)}rem`,
     [zoomLevel],
@@ -204,25 +256,15 @@ export function ChapterReaderClient({
           currentPanel={displayedPanel}
           totalPanels={chapter.images.length}
           zoomLevel={zoomLevel}
-          cinematic={cinematic}
-          musicOn={musicOn}
-          isLiked={isLiked}
           next={next}
+          showNextCta={showNextCta}
           onBack={() => window.history.back()}
-          onToggleFullscreen={() => void toggleFullscreen()}
-          onToggleMusic={() => setMusicOn((current) => !current)}
-          onToggleLike={() => void toggleLikedChapter(chapter.id)}
           onZoomOut={handleZoomOut}
           onZoomIn={handleZoomIn}
           onZoomReset={handleZoomReset}
         />
 
-        <div className="mx-auto w-full" style={{ maxWidth: readerWidth }}>
-          <div className="mb-4 rounded-[24px] border border-white/7 bg-black/32 px-4 py-3 text-sm leading-6 text-zinc-300 sm:px-5">
-            Vertical reading is optimized for quick resume and low-memory scrolling. Your last
-            panel is saved automatically on this device.
-          </div>
-
+        <div className="mx-auto w-full transition-[max-width] duration-200" style={{ maxWidth: readerWidth }}>
           <div className="space-y-4 sm:space-y-5">
             {chapter.images.map((image, index) => (
               <ReaderPanel
