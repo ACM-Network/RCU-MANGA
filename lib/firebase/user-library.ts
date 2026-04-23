@@ -1,112 +1,195 @@
 "use client";
 
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  setDoc,
+  writeBatch,
+} from "firebase/firestore";
 
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import type { ReadingHistoryEntry, UserLibraryProfile } from "@/lib/types";
 
-const storageKey = "rcpu-user-library";
-
 export const emptyLibraryProfile: UserLibraryProfile = {
   id: "guest",
   name: "Guest Reader",
-  email: "guest@local",
+  email: "",
   bookmarks: [],
   readingHistory: {},
   likedChapters: [],
 };
 
-function normalizeReadingHistory(readingHistory: UserLibraryProfile["readingHistory"] | undefined) {
-  const entries = Object.entries(readingHistory ?? {});
-  return Object.fromEntries(
-    entries.map(([slug, entry]) => {
-      const normalizedEntry: ReadingHistoryEntry = {
-        mangaSlug: entry?.mangaSlug ?? slug,
-        chapterId: entry?.chapterId ?? "",
-        panelIndex: entry?.panelIndex ?? 0,
-        scrollOffset: entry?.scrollOffset ?? 0,
-        progress: entry?.progress ?? 0,
-        updatedAt: entry?.updatedAt ?? new Date(0).toISOString(),
-      };
-      return [slug, normalizedEntry];
-    }),
-  );
+function normalizeReadingEntry(mangaSlug: string, entry: Partial<ReadingHistoryEntry> | undefined) {
+  return {
+    mangaSlug: entry?.mangaSlug ?? mangaSlug,
+    chapterId: entry?.chapterId ?? "",
+    panelIndex: entry?.panelIndex ?? 0,
+    scrollOffset: entry?.scrollOffset ?? 0,
+    progress: entry?.progress ?? 0,
+    updatedAt: entry?.updatedAt ?? new Date(0).toISOString(),
+  } satisfies ReadingHistoryEntry;
 }
 
-export function readLocalLibraryProfile() {
-  if (typeof window === "undefined") return emptyLibraryProfile;
-  const raw = window.localStorage.getItem(storageKey);
-  if (!raw) return emptyLibraryProfile;
-  const parsed = JSON.parse(raw) as UserLibraryProfile;
+function createUserProfileDoc(profile: Pick<UserLibraryProfile, "id" | "name" | "email">) {
   return {
-    ...emptyLibraryProfile,
-    ...parsed,
-    readingHistory: normalizeReadingHistory(parsed.readingHistory),
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    updatedAt: new Date().toISOString(),
   };
 }
 
-export function writeLocalLibraryProfile(profile: UserLibraryProfile) {
-  window.localStorage.setItem(storageKey, JSON.stringify(profile));
-  window.dispatchEvent(new CustomEvent("rcpu-library-updated"));
+function requireFirestore() {
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firebase Firestore is not configured.");
+  }
+
+  return db;
 }
 
 export function subscribeToUserLibrary(
   userId: string | null,
   callback: (profile: UserLibraryProfile) => void,
 ) {
-  if (userId && isFirebaseConfigured && db) {
-    const ref = doc(db, "users", userId);
-    return onSnapshot(ref, (snapshot) => {
-      const data = snapshot.exists()
-  ? snapshot.data()
-  : {
-      name: "RCPU Reader",
-      email: "",
-      bookmarks: [],
-      readingHistory: {},
-      likedChapters: [],
-    };
-      callback({
-        ...emptyLibraryProfile,
-        id: userId,
-        name: data?.name ?? "RCPU Reader",
-        email: data?.email ?? "",
-        bookmarks: data?.bookmarks ?? [],
-        readingHistory: normalizeReadingHistory(data?.readingHistory),
-        likedChapters: data?.likedChapters ?? [],
-      });
-    });
+  if (!userId || !isFirebaseConfigured || !db) {
+    callback(emptyLibraryProfile);
+    return () => undefined;
   }
 
-  const sync = () => callback(readLocalLibraryProfile());
-  sync();
-  window.addEventListener("rcpu-library-updated", sync);
-  return () => window.removeEventListener("rcpu-library-updated", sync);
+  const nextProfile: UserLibraryProfile = {
+    ...emptyLibraryProfile,
+    id: userId,
+  };
+
+  const emit = () => callback({ ...nextProfile });
+
+  const unsubscribeLibrary = onSnapshot(doc(db, "users", userId, "library", "state"), (snapshot) => {
+    nextProfile.bookmarks = snapshot.data()?.bookmarks ?? [];
+    emit();
+  });
+
+  const unsubscribeLikes = onSnapshot(doc(db, "users", userId, "likes", "state"), (snapshot) => {
+    nextProfile.likedChapters = snapshot.data()?.chapterIds ?? [];
+    emit();
+  });
+
+  const unsubscribeProgress = onSnapshot(
+    query(collection(db, "users", userId, "progress")),
+    (snapshot) => {
+      nextProfile.readingHistory = Object.fromEntries(
+        snapshot.docs.map((entryDoc) => [
+          entryDoc.id,
+          normalizeReadingEntry(entryDoc.id, entryDoc.data() as Partial<ReadingHistoryEntry>),
+        ]),
+      );
+      emit();
+    },
+  );
+
+  return () => {
+    unsubscribeLibrary();
+    unsubscribeLikes();
+    unsubscribeProgress();
+  };
 }
 
-export async function persistUserLibrary(profile: UserLibraryProfile) {
-  // 🔐 Logged-in user → Firestore
-  if (profile.id !== "guest") {
-    if (!isFirebaseConfigured || !db) {
-      throw new Error("Firebase not configured properly");
-    }
+export async function persistBookmarks(
+  profile: Pick<UserLibraryProfile, "id" | "name" | "email" | "bookmarks">,
+) {
+  if (profile.id === "guest") return;
 
-    await setDoc(
-      doc(db, "users", profile.id),
+  const firestore = requireFirestore();
+
+  await Promise.all([
+    setDoc(doc(firestore, "users", profile.id), createUserProfileDoc(profile), { merge: true }),
+    setDoc(
+      doc(firestore, "users", profile.id, "library", "state"),
       {
-        name: profile.name,
-        email: profile.email,
         bookmarks: profile.bookmarks,
-        readingHistory: profile.readingHistory,
-        likedChapters: profile.likedChapters,
         updatedAt: new Date().toISOString(),
       },
       { merge: true },
-    );
+    ),
+  ]);
+}
 
-    return;
-  }
+export async function persistLikedChapters(
+  profile: Pick<UserLibraryProfile, "id" | "name" | "email" | "likedChapters">,
+) {
+  if (profile.id === "guest") return;
 
-  // 🧑 Guest → localStorage
-  writeLocalLibraryProfile(profile);
+  const firestore = requireFirestore();
+
+  await Promise.all([
+    setDoc(doc(firestore, "users", profile.id), createUserProfileDoc(profile), { merge: true }),
+    setDoc(
+      doc(firestore, "users", profile.id, "likes", "state"),
+      {
+        chapterIds: profile.likedChapters,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    ),
+  ]);
+}
+
+export async function persistReadingProgress(
+  profile: Pick<UserLibraryProfile, "id" | "name" | "email">,
+  entry: ReadingHistoryEntry,
+) {
+  if (profile.id === "guest") return;
+
+  const firestore = requireFirestore();
+
+  await Promise.all([
+    setDoc(doc(firestore, "users", profile.id), createUserProfileDoc(profile), { merge: true }),
+    setDoc(doc(firestore, "users", profile.id, "progress", entry.mangaSlug), entry, { merge: true }),
+  ]);
+}
+
+export async function persistUserLibrary(profile: UserLibraryProfile) {
+  if (profile.id === "guest") return;
+
+  const firestore = requireFirestore();
+  const batch = writeBatch(firestore);
+  const updatedAt = new Date().toISOString();
+
+  batch.set(
+    doc(firestore, "users", profile.id),
+    {
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      updatedAt,
+    },
+    { merge: true },
+  );
+
+  batch.set(
+    doc(firestore, "users", profile.id, "library", "state"),
+    {
+      bookmarks: profile.bookmarks,
+      updatedAt,
+    },
+    { merge: true },
+  );
+
+  batch.set(
+    doc(firestore, "users", profile.id, "likes", "state"),
+    {
+      chapterIds: profile.likedChapters,
+      updatedAt,
+    },
+    { merge: true },
+  );
+
+  Object.values(profile.readingHistory).forEach((entry) => {
+    batch.set(doc(firestore, "users", profile.id, "progress", entry.mangaSlug), entry, {
+      merge: true,
+    });
+  });
+
+  await batch.commit();
 }
