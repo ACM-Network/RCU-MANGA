@@ -57,7 +57,15 @@ export function subscribeToUserLibrary(
   if (userId && isFirebaseConfigured && db) {
     const ref = doc(db, "users", userId);
     return onSnapshot(ref, (snapshot) => {
-      const data = snapshot.data();
+      const data = snapshot.exists()
+  ? snapshot.data()
+  : {
+      name: "RCPU Reader",
+      email: "",
+      bookmarks: [],
+      readingHistory: {},
+      likedChapters: [],
+    };
       callback({
         ...emptyLibraryProfile,
         id: userId,
@@ -77,7 +85,12 @@ export function subscribeToUserLibrary(
 }
 
 export async function persistUserLibrary(profile: UserLibraryProfile) {
-  if (profile.id !== "guest" && isFirebaseConfigured && db) {
+  // 🔐 Logged-in user → Firestore
+  if (profile.id !== "guest") {
+    if (!isFirebaseConfigured || !db) {
+      throw new Error("Firebase not configured properly");
+    }
+
     await setDoc(
       doc(db, "users", profile.id),
       {
@@ -86,11 +99,14 @@ export async function persistUserLibrary(profile: UserLibraryProfile) {
         bookmarks: profile.bookmarks,
         readingHistory: profile.readingHistory,
         likedChapters: profile.likedChapters,
+        updatedAt: new Date().toISOString(),
       },
       { merge: true },
     );
+
     return;
   }
 
+  // 🧑 Guest → localStorage
   writeLocalLibraryProfile(profile);
 }
