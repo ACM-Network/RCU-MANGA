@@ -5,34 +5,21 @@ import { useMemo } from "react";
 import { PosterCard } from "@/components/manga/poster-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserLibrary } from "@/hooks/use-user-library";
-import { mangaLibrary } from "@/lib/content";
+import { getTrendingManga } from "@/lib/content";
+import { getBecauseYouReadRecommendations } from "@/lib/recommendations";
 
 export function BecauseYouRead() {
   const { profile, loading } = useUserLibrary();
 
   const recommendations = useMemo(() => {
-    const lastRead = Object.values(profile.readingHistory).sort((a, b) =>
-      b.updatedAt.localeCompare(a.updatedAt),
-    )[0];
+    const history = Object.values(profile.readingHistory);
 
-    if (!lastRead) return [];
+    if (!history.length) {
+      return getTrendingManga().slice(0, 4);
+    }
 
-    const sourceManga = mangaLibrary.find((entry) => entry.slug === lastRead.mangaSlug);
-    if (!sourceManga) return [];
-
-    return mangaLibrary
-      .filter((entry) => entry.slug !== sourceManga.slug)
-      .map((entry) => {
-        const sharedGenres = entry.genre.filter((genre) => sourceManga.genre.includes(genre)).length;
-        const sameUniverse = entry.universe === sourceManga.universe ? 3 : 0;
-        return {
-          manga: entry,
-          score: sharedGenres * 2 + sameUniverse + entry.trendingScore / 100,
-        };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4)
-      .map((entry) => entry.manga);
+    const computed = getBecauseYouReadRecommendations(history, 4);
+    return computed.length ? computed : getTrendingManga().slice(0, 4);
   }, [profile.readingHistory]);
 
   if (loading) {
@@ -51,8 +38,8 @@ export function BecauseYouRead() {
 
   if (!recommendations.length) {
     return (
-      <div className="panel rounded-[28px] p-6 text-zinc-300">
-        Read a few chapters and this rail will start suggesting similar manga from your current taste.
+      <div className="panel rounded-[28px] p-6 text-stone-300">
+        Read a few chapters and this rail will pivot from featured picks to personal recommendations.
       </div>
     );
   }

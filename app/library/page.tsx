@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { mangaLibrary } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Manga Library | RCPU",
+  title: "Manga Library | Realm Cinematic",
   description: "Browse the cinematic manga catalog across RCPU and Strings Universe.",
 };
 
@@ -15,7 +15,7 @@ export default function LibraryPage() {
       <SectionHeading
         eyebrow="Catalog"
         title="Manga Library"
-        description="Filter by genre, universe, and release status while keeping a poster-first cinematic browsing experience."
+        description="Browse the full catalog with a mobile-first filter system tuned for quick discovery and fast re-entry."
       />
       <LibraryClient manga={mangaLibrary} />
     </div>

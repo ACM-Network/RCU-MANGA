@@ -11,10 +11,13 @@ interface MangaActionsProps {
 export function MangaActions({ mangaSlug, firstChapterId }: MangaActionsProps) {
   const { profile, toggleBookmark } = useUserLibrary();
   const isBookmarked = profile.bookmarks.includes(mangaSlug);
+  const resumeChapterId = profile.readingHistory[mangaSlug]?.chapterId || firstChapterId;
 
   return (
     <div className="mt-8 flex flex-wrap gap-4">
-      <ButtonLink href={`/read/${mangaSlug}/${firstChapterId}`}>Start Reading</ButtonLink>
+      <ButtonLink href={`/read/${mangaSlug}/${resumeChapterId}`}>
+        {profile.readingHistory[mangaSlug] ? "Continue Reading" : "Start Reading"}
+      </ButtonLink>
       <Button variant="secondary" onClick={() => void toggleBookmark(mangaSlug)}>
         {isBookmarked ? "Remove Bookmark" : "Bookmark Series"}
       </Button>

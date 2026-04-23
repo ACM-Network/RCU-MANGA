@@ -1,39 +1,83 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
   emptyLibraryProfile,
+  ensureUserProfile,
+  incrementChapterLikeCount,
+  incrementChapterView,
+  mergeGuestProfileIntoUser,
   persistBookmarks,
   persistLikedChapters,
-  persistUserLibrary,
+  persistReadingProgress,
   subscribeToUserLibrary,
+  type ReaderIdentity,
 } from "@/lib/firebase/user-library";
 import type { ReadingHistoryEntry, UserLibraryProfile } from "@/lib/types";
 
+function createIdentity(
+  id: string | null | undefined,
+  name: string | null | undefined,
+  email: string | null | undefined,
+  photoURL: string | null | undefined,
+): ReaderIdentity | null {
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    email,
+    photoURL,
+  };
+}
+
 export function useUserLibrary() {
   const { user } = useAuth();
+  const identity = useMemo(
+    () => createIdentity(user?.uid, user?.displayName, user?.email, user?.photoURL),
+    [user?.displayName, user?.email, user?.photoURL, user?.uid],
+  );
+  const viewerId = identity?.id ?? null;
+
   const [profile, setProfile] = useState<UserLibraryProfile>(emptyLibraryProfile);
   const [loading, setLoading] = useState(true);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const profileRef = useRef<UserLibraryProfile>(emptyLibraryProfile);
 
   useEffect(() => {
-    const unsubscribe = subscribeToUserLibrary(user?.uid ?? null, (nextProfile) => {
-      const mergedProfile = {
-        ...nextProfile,
-        id: user?.uid ?? nextProfile.id,
-        name: user?.displayName ?? nextProfile.name ?? "RCPU Reader",
-        email: user?.email ?? nextProfile.email ?? "",
-      };
+    if (identity) {
+      void mergeGuestProfileIntoUser(identity).catch(() => undefined);
+      void ensureUserProfile(identity).catch(() => undefined);
+    }
 
-      profileRef.current = mergedProfile;
-      setProfile(mergedProfile);
-      setLoading(false);
-    });
+    const unsubscribe = subscribeToUserLibrary(
+      identity,
+      (nextProfile) => {
+        const resolvedProfile = {
+          ...nextProfile,
+          id: identity?.id ?? "guest",
+          name: identity?.name?.trim() || nextProfile.name || "Guest Reader",
+          email: identity?.email?.trim() || nextProfile.email || "",
+          photoURL: identity?.photoURL?.trim() || nextProfile.photoURL || "",
+        };
+
+        profileRef.current = resolvedProfile;
+        setProfile(resolvedProfile);
+        setSyncMessage(null);
+        setLoading(false);
+      },
+      (message) => {
+        setSyncMessage(message);
+        setLoading(false);
+      },
+    );
 
     return unsubscribe;
-  }, [user?.displayName, user?.email, user?.uid]);
+  }, [identity]);
 
   const commitProfile = useCallback((nextProfile: UserLibraryProfile) => {
     profileRef.current = nextProfile;
@@ -58,20 +102,13 @@ export function useUserLibrary() {
   );
 
   const saveProgress = useCallback(
-    async (
-      mangaSlug: string,
-      chapterId: string,
-      panelIndex: number,
-      scrollOffset: number,
-      progress: number,
-    ) => {
+    async (mangaSlug: string, chapterId: string, pageIndex: number, progress: number) => {
       const currentProfile = profileRef.current;
       const currentEntry = currentProfile.readingHistory[mangaSlug];
 
       if (
         currentEntry?.chapterId === chapterId &&
-        currentEntry.panelIndex === panelIndex &&
-        Math.abs((currentEntry.scrollOffset ?? 0) - scrollOffset) < 2 &&
+        currentEntry.pageIndex === pageIndex &&
         Math.abs((currentEntry.progress ?? 0) - progress) < 0.001
       ) {
         return;
@@ -80,8 +117,7 @@ export function useUserLibrary() {
       const nextEntry: ReadingHistoryEntry = {
         mangaSlug,
         chapterId,
-        panelIndex,
-        scrollOffset,
+        pageIndex,
         progress,
         updatedAt: new Date().toISOString(),
       };
@@ -95,7 +131,7 @@ export function useUserLibrary() {
       };
 
       commitProfile(nextProfile);
-      await persistUserLibrary(nextProfile);
+      await persistReadingProgress(nextProfile, nextEntry);
     },
     [commitProfile],
   );
@@ -112,16 +148,32 @@ export function useUserLibrary() {
       };
 
       commitProfile(nextProfile);
-      await persistLikedChapters(nextProfile);
+      await Promise.all([
+        persistLikedChapters(nextProfile),
+        incrementChapterLikeCount(chapterId, hasLiked ? -1 : 1),
+      ]);
+
+      return !hasLiked;
     },
     [commitProfile],
   );
 
+  const registerChapterView = useCallback(async (chapterId: string) => {
+    if (!viewerId) {
+      return;
+    }
+
+    await incrementChapterView(chapterId, viewerId);
+  }, [viewerId]);
+
   return {
     profile,
     loading,
+    syncMessage,
+    isAuthenticated: Boolean(viewerId),
     toggleBookmark,
     saveProgress,
     toggleLikedChapter,
+    registerChapterView,
   };
 }

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { GuestPaywall } from "@/components/reader/guest-paywall";
 import { OnboardingOverlay } from "@/components/reader/onboarding-overlay";
 import { PageViewer } from "@/components/reader/page-viewer";
 import { ReaderControls } from "@/components/reader/reader-controls";
-import { useReader } from "@/components/reader/use-reader";
+import { ReaderQuickMenu } from "@/components/reader/reader-quick-menu";
+import { useReader } from "@/hooks/use-reader";
 import { useUserLibrary } from "@/hooks/use-user-library";
 import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
@@ -17,7 +19,7 @@ interface ChapterReaderClientProps {
   next: Chapter | null;
 }
 
-const onboardingStorageKey = "rcpu-reader-onboarding";
+const onboardingStorageKey = "realm-cinematic:onboarding-seen";
 
 export function ChapterReaderClient({
   manga,
@@ -25,64 +27,23 @@ export function ChapterReaderClient({
   previous,
   next,
 }: ChapterReaderClientProps) {
-  const { profile, loading, saveProgress } = useUserLibrary();
+  const {
+    profile,
+    loading,
+    syncMessage,
+    isAuthenticated,
+    registerChapterView,
+    saveProgress,
+    toggleLikedChapter,
+  } = useUserLibrary();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [previewShift, setPreviewShift] = useState(0);
+  const [likeBurst, setLikeBurst] = useState<{ x: number; y: number; key: number } | null>(null);
 
   const initialPage =
     profile.readingHistory[manga.slug]?.chapterId === chapter.id
-      ? profile.readingHistory[manga.slug]?.panelIndex ?? 0
+      ? profile.readingHistory[manga.slug]?.pageIndex ?? 0
       : 0;
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const previousBackground = document.body.style.backgroundColor;
-    const previousTouchAction = document.body.style.touchAction;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.backgroundColor = "#000";
-    document.body.style.touchAction = "none";
-    document.documentElement.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.backgroundColor = previousBackground;
-      document.body.style.touchAction = previousTouchAction;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-    };
-  }, []);
-
-  useEffect(() => {
-    const hasSeenOnboarding = window.localStorage.getItem(onboardingStorageKey) === "true";
-    if (hasSeenOnboarding) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      setShowOnboarding(true);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  const dismissOnboarding = useCallback(() => {
-    setShowOnboarding(false);
-    setPreviewShift(0);
-    window.localStorage.setItem(onboardingStorageKey, "true");
-  }, []);
-
-  const handlePageChange = useCallback(
-    async (page: number) => {
-      const totalPages = Math.max(chapter.images.length, 1);
-      await saveProgress(
-        manga.slug,
-        chapter.id,
-        page,
-        0,
-        Math.max(0, Math.min(1, (page + 1) / totalPages)),
-      );
-    },
-    [chapter.id, chapter.images.length, manga.slug, saveProgress],
-  );
 
   const previousHref = useMemo(
     () => (previous ? `/read/${manga.slug}/${previous.id}` : null),
@@ -91,12 +52,16 @@ export function ChapterReaderClient({
   const nextHref = useMemo(() => (next ? `/read/${manga.slug}/${next.id}` : null), [manga.slug, next]);
 
   const reader = useReader({
-    totalPages: chapter.images.length,
+    totalPages: chapter.pages.length,
     initialPage,
     ready: !loading,
+    isAuthenticated,
     previousChapterHref: previousHref,
     nextChapterHref: nextHref,
-    onPageChange: handlePageChange,
+    onPageChange: async (page) => {
+      const totalPages = Math.max(chapter.pages.length, 1);
+      await saveProgress(manga.slug, chapter.id, page, Math.max(0, Math.min(1, (page + 1) / totalPages)));
+    },
   });
 
   const handleBack = useCallback(() => {
@@ -105,32 +70,124 @@ export function ChapterReaderClient({
 
   const handleInteract = useCallback(() => {
     if (showOnboarding) {
-      dismissOnboarding();
+      setShowOnboarding(false);
+      setPreviewShift(0);
+      window.localStorage.setItem(onboardingStorageKey, "true");
     }
-  }, [dismissOnboarding, showOnboarding]);
+  }, [showOnboarding]);
+
+  const handleToggleLike = useCallback(async () => {
+    await toggleLikedChapter(chapter.id);
+  }, [chapter.id, toggleLikedChapter]);
+
+  const handleDoubleTap = useCallback(
+    (point: { x: number; y: number }) => {
+      setLikeBurst({
+        x: point.x,
+        y: point.y,
+        key: Date.now(),
+      });
+      void toggleLikedChapter(chapter.id);
+    },
+    [chapter.id, toggleLikedChapter],
+  );
+
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyBackground = document.body.style.backgroundColor;
+    const previousBodyTouchAction = document.body.style.touchAction;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+    const previousBodyOverscroll = document.body.style.overscrollBehavior;
+
+    const preventDefault = (event: Event) => event.preventDefault();
+
+    document.body.style.overflow = "hidden";
+    document.body.style.backgroundColor = "#020204";
+    document.body.style.touchAction = "none";
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    document.addEventListener("contextmenu", preventDefault);
+    document.addEventListener("dragstart", preventDefault);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.backgroundColor = previousBodyBackground;
+      document.body.style.touchAction = previousBodyTouchAction;
+      document.body.style.overscrollBehavior = previousBodyOverscroll;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
+      document.removeEventListener("contextmenu", preventDefault);
+      document.removeEventListener("dragstart", preventDefault);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    const hasSeenOnboarding = window.localStorage.getItem(onboardingStorageKey) === "true";
+
+    if (!hasSeenOnboarding) {
+      const frameId = window.requestAnimationFrame(() => {
+        setShowOnboarding(true);
+      });
+
+      return () => window.cancelAnimationFrame(frameId);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      void registerChapterView(chapter.id);
+    }
+  }, [chapter.id, isAuthenticated, loading, registerChapterView]);
+
+  useEffect(() => {
+    if (!likeBurst) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLikeBurst(null);
+    }, 720);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [likeBurst]);
 
   if (loading) {
     return <div className="h-[100svh] w-full bg-black" />;
   }
 
+  const viewerId = profile.id === "guest" ? "guest" : profile.id;
+  const viewerLabel = profile.email || profile.name || "Preview copy";
+  const isChapterLiked = profile.likedChapters.includes(chapter.id);
+
   return (
-    <div className="relative h-[100svh] w-full overflow-hidden bg-black">
+    <div className="reader-mode relative h-[100svh] w-full overflow-hidden bg-black">
       <PageViewer
-        images={chapter.images}
+        pages={chapter.pages}
         title={`${manga.title} ${chapter.title}`}
         currentPage={reader.currentPage}
         previewShift={previewShift}
+        viewerId={viewerId}
+        viewerLabel={viewerLabel}
+        preferProtected={isAuthenticated}
+        interactionLocked={reader.paywallVisible || reader.quickMenuOpen}
         onNext={reader.goNext}
         onPrevious={reader.goPrevious}
         onToggleUi={reader.toggleUi}
         onInteract={handleInteract}
+        onLongPress={reader.openQuickMenu}
+        onDoubleTap={handleDoubleTap}
       />
 
       <ReaderControls
         title={`${formatChapterNumber(chapter.number)} - ${chapter.title}`}
         currentPage={reader.currentPage}
         totalPages={reader.totalPages}
-        progress={reader.progress}
         visible={reader.uiVisible}
         onBack={handleBack}
         nextChapterHref={nextHref}
@@ -138,9 +195,43 @@ export function ChapterReaderClient({
 
       <OnboardingOverlay
         visible={showOnboarding}
-        onDismiss={dismissOnboarding}
+        onDismiss={() => {
+          setShowOnboarding(false);
+          setPreviewShift(0);
+          window.localStorage.setItem(onboardingStorageKey, "true");
+        }}
         onPreviewShift={setPreviewShift}
       />
+
+      <ReaderQuickMenu
+        visible={reader.quickMenuOpen}
+        chapterTitle={`${manga.title} • ${chapter.title}`}
+        mangaHref={`/manga/${manga.slug}`}
+        isLiked={isChapterLiked}
+        onClose={reader.closeQuickMenu}
+        onToggleLike={() => void handleToggleLike()}
+      />
+
+      <GuestPaywall visible={reader.paywallVisible} onClose={reader.closePaywall} />
+
+      {syncMessage ? (
+        <div className="pointer-events-none absolute left-1/2 top-6 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-4 py-2 text-xs uppercase tracking-[0.28em] text-stone-200 backdrop-blur-xl">
+          {syncMessage}
+        </div>
+      ) : null}
+
+      {likeBurst ? (
+        <div
+          key={likeBurst.key}
+          className="pointer-events-none absolute z-30 text-3xl text-rose-300 animate-[likeBurst_720ms_ease-out_forwards]"
+          style={{
+            left: likeBurst.x - 16,
+            top: likeBurst.y - 16,
+          }}
+        >
+          ♥
+        </div>
+      ) : null}
     </div>
   );
 }

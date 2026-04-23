@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -11,18 +12,25 @@ import {
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  signInWithPopup,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
   type User,
 } from "firebase/auth";
 
-import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  auth,
+  ensureFirebaseAppCheck,
+  googleProvider,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isConfigured: boolean;
+  signInWithGoogle: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -39,10 +47,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    ensureFirebaseAppCheck();
+
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);
     });
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    if (!isFirebaseConfigured || !auth) {
+      throw new Error("Firebase Auth is not configured.");
+    }
+
+    if (!googleProvider) {
+      throw new Error("Google Sign-In is not configured.");
+    }
+
+    await signInWithPopup(auth, googleProvider);
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error("Firebase Auth is not configured.");
+    }
+
+    await signInWithEmailAndPassword(auth, email, password);
+  }, []);
+
+  const signUp = useCallback(async (name: string, email: string, password: string) => {
+    if (!auth) {
+      throw new Error("Firebase Auth is not configured.");
+    }
+
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(result.user, { displayName: name.trim() || "Cinematic Reader" });
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (!auth) {
+      return;
+    }
+
+    await firebaseSignOut(auth);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -50,27 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isConfigured: isFirebaseConfigured,
-      async signIn(email, password) {
-        if (!auth) {
-          throw new Error("Firebase Auth is not configured.");
-        }
-
-        await signInWithEmailAndPassword(auth, email, password);
-      },
-      async signUp(name, email, password) {
-        if (!auth) {
-          throw new Error("Firebase Auth is not configured.");
-        }
-
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(result.user, { displayName: name });
-      },
-      async signOut() {
-        if (!auth) return;
-        await firebaseSignOut(auth);
-      },
+      signInWithGoogle,
+      signIn,
+      signUp,
+      signOut,
     }),
-    [loading, user],
+    [loading, signIn, signInWithGoogle, signOut, signUp, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

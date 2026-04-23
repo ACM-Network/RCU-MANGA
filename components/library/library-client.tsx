@@ -40,12 +40,17 @@ export function LibraryClient({ manga }: LibraryClientProps) {
   return (
     <div className="space-y-8">
       <div className="panel rounded-[30px] p-5 sm:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs uppercase tracking-[0.32em] text-stone-400">Browse and filter the full catalog</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-stone-500">{filtered.length} titles</p>
+        </div>
+
         <div className="grid gap-4 lg:grid-cols-4">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search titles, themes, genres..."
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-rose-500/60"
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/20"
           />
           <select
             value={genre}
@@ -90,7 +95,7 @@ export function LibraryClient({ manga }: LibraryClientProps) {
       </div>
 
       {!filtered.length ? (
-        <div className="panel rounded-[28px] p-6 text-zinc-300">
+        <div className="panel rounded-[28px] p-6 text-stone-300">
           No series match the current filters. Try widening the genre or search query.
         </div>
       ) : null}

@@ -1,6 +1,14 @@
 export type UniverseKey = "RCPU" | "Strings Universe";
 export type MangaStatus = "Ongoing" | "Completed";
 
+export interface ChapterPageAsset {
+  id: string;
+  previewSrc: string;
+  storagePath?: string;
+  width?: number;
+  height?: number;
+}
+
 export interface Chapter {
   id: string;
   slug: string;
@@ -8,7 +16,8 @@ export interface Chapter {
   title: string;
   createdAt: string;
   synopsis: string;
-  images: string[];
+  pages: ChapterPageAsset[];
+  previewPageCount?: number;
 }
 
 export interface Manga {
@@ -32,18 +41,25 @@ export interface UserLibraryProfile {
   id: string;
   name: string;
   email: string;
+  photoURL?: string;
   bookmarks: string[];
   readingHistory: Record<string, ReadingHistoryEntry>;
   likedChapters: string[];
+  updatedAt?: string;
 }
 
 export interface ReadingHistoryEntry {
   mangaSlug: string;
   chapterId: string;
-  panelIndex: number;
-  scrollOffset: number;
+  pageIndex: number;
   progress: number;
   updatedAt: string;
+}
+
+export interface ChapterEngagement {
+  chapterId: string;
+  views: number;
+  likes: number;
 }
 
 export interface CommentRecord {

@@ -3,10 +3,10 @@ import Link from "next/link";
 export default function NotFoundPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 lg:px-8">
-      <div className="rounded-[32px] border border-white/8 bg-white/[0.03] p-8">
-        <p className="text-xs uppercase tracking-[0.42em] text-rose-400">404</p>
-        <h1 className="section-title mt-4 text-4xl text-white">This story node does not exist.</h1>
-        <p className="mt-4 text-zinc-300">
+      <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-8">
+        <p className="text-xs uppercase tracking-[0.42em] text-amber-100/80">404</p>
+        <h1 className="mt-4 text-4xl font-semibold text-white">This story node does not exist.</h1>
+        <p className="mt-4 text-stone-300">
           The requested page is missing, hidden behind a sealed gate, or removed from the active timeline.
         </p>
         <Link

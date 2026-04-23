@@ -2,17 +2,16 @@
 @import "../styles/effects.css";
 
 :root {
-  --background: #05020b;
-  --background-elevated: rgba(15, 10, 24, 0.82);
-  --background-soft: rgba(24, 16, 38, 0.68);
-  --foreground: #f7f2ff;
-  --muted: #b3a6c4;
+  --background: #05060a;
+  --background-elevated: rgba(15, 17, 22, 0.9);
+  --background-soft: rgba(17, 20, 27, 0.72);
+  --foreground: #f5f1e8;
+  --muted: #a6a8ad;
   --border: rgba(255, 255, 255, 0.08);
-  --purple: #8b2cff;
-  --purple-soft: #321049;
-  --red: #ff315d;
-  --red-soft: rgba(255, 43, 85, 0.18);
-  --glow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px rgba(0, 0, 0, 0.45);
+  --accent: #ff8857;
+  --accent-strong: #ffca67;
+  --accent-cool: #76d6d1;
+  --glow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 70px rgba(0, 0, 0, 0.48);
 }
 
 * {
@@ -30,13 +29,14 @@ body {
   height: 100%;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 0%, rgba(139, 44, 255, 0.14), transparent 26%),
-    radial-gradient(circle at 82% 8%, rgba(255, 49, 93, 0.16), transparent 24%),
-    radial-gradient(circle at 50% 100%, rgba(255, 94, 0, 0.06), transparent 26%),
-    linear-gradient(180deg, #030206 0%, #09040f 48%, #030206 100%);
+    radial-gradient(circle at 12% 0%, rgba(255, 136, 87, 0.14), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(118, 214, 209, 0.11), transparent 24%),
+    radial-gradient(circle at 52% 100%, rgba(255, 202, 103, 0.08), transparent 30%),
+    linear-gradient(180deg, #040509 0%, #080a10 52%, #040509 100%);
   color: var(--foreground);
-  font-family: var(--font-body, "Trebuchet MS", "Segoe UI", sans-serif);
+  font-family: var(--font-body, "Segoe UI Variable Text", "Trebuchet MS", sans-serif);
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 a {
@@ -44,8 +44,11 @@ a {
   text-decoration: none;
 }
 
-img {
+img,
+canvas {
   display: block;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 button,
@@ -53,21 +56,23 @@ input,
 textarea,
 select {
   font: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
-  background: rgba(255, 43, 85, 0.3);
-  color: white;
+  background: rgba(255, 136, 87, 0.35);
+  color: #fff;
 }
 
 .font-display {
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: "Arial Black", "Franklin Gothic Heavy", Impact, sans-serif;
   letter-spacing: 0.04em;
 }
 
 .page-shell {
   position: relative;
   overflow: clip;
+  isolation: isolate;
 }
 
 .page-shell::before {
@@ -79,7 +84,17 @@ select {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 88px 88px;
+  background-size: 92px 92px;
+}
+
+.page-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.045), transparent 36%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
 }
 
 .ambient-orb {
@@ -91,13 +106,13 @@ select {
 
 .panel {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
   backdrop-filter: blur(24px);
   box-shadow: var(--glow);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #d9b8ff 45%, #ff5c7d 100%);
+  background: linear-gradient(135deg, #fff 0%, #ffd39b 38%, #76d6d1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -113,7 +128,7 @@ select {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 43, 85, 0.7), rgba(109, 40, 217, 0.45), rgba(255, 255, 255, 0.15));
+  background: linear-gradient(135deg, rgba(255, 136, 87, 0.7), rgba(255, 202, 103, 0.4), rgba(118, 214, 209, 0.32));
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -124,15 +139,16 @@ select {
 }
 
 .section-title {
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Franklin Gothic Heavy", sans-serif;
+  font-family: "Arial Black", "Franklin Gothic Heavy", Impact, sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .reader-mode {
   background:
-    radial-gradient(circle at center, rgba(255, 43, 85, 0.08), transparent 28%),
-    linear-gradient(180deg, #030206 0%, #0a0613 100%);
+    radial-gradient(circle at center, rgba(255, 202, 103, 0.06), transparent 28%),
+    radial-gradient(circle at top, rgba(118, 214, 209, 0.08), transparent 24%),
+    linear-gradient(180deg, #040509 0%, #090b11 100%);
 }
 
 .section-shell {
@@ -152,12 +168,12 @@ select {
 
 .poster-shadow {
   box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.45),
+    0 16px 38px rgba(0, 0, 0, 0.48),
     0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .story-map-line {
-  background: linear-gradient(90deg, rgba(255, 43, 85, 0.4), rgba(109, 40, 217, 0.4));
+  background: linear-gradient(90deg, rgba(255, 136, 87, 0.44), rgba(118, 214, 209, 0.38));
 }
 
 .hide-scrollbar {
@@ -182,22 +198,36 @@ select {
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 0 0 rgba(255, 43, 85, 0.2);
+    box-shadow: 0 0 0 rgba(255, 136, 87, 0.16);
   }
   50% {
-    box-shadow: 0 0 30px rgba(255, 43, 85, 0.25);
+    box-shadow: 0 0 30px rgba(255, 136, 87, 0.2);
   }
 }
 
 @keyframes readerHandSwipe {
   0%,
   100% {
-    transform: translate3d(10px, 0, 0);
+    transform: translate3d(12px, 0, 0);
     opacity: 0.65;
   }
   50% {
-    transform: translate3d(-18px, 0, 0);
+    transform: translate3d(-20px, 0, 0);
     opacity: 1;
+  }
+}
+
+@keyframes likeBurst {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.72);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -36px, 0) scale(1.26);
+    opacity: 0;
   }
 }
 
@@ -226,7 +256,8 @@ select {
 
   .animate-drift,
   .animate-pulse-glow,
-  .animate-\[readerHandSwipe_1\.2s_ease-in-out_infinite\] {
+  .animate-\[readerHandSwipe_1\.2s_ease-in-out_infinite\],
+  .animate-\[likeBurst_720ms_ease-out_forwards\] {
     animation: none;
   }
 }

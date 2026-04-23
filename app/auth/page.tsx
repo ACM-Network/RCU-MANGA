@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { AuthPanel } from "@/components/auth/auth-panel";
 
 export const metadata: Metadata = {
-  title: "Account | RCPU",
-  description: "Login or create an RCPU reader account backed by Firebase Authentication.",
+  title: "Account | Realm Cinematic",
+  description: "Login or create a Realm Cinematic reader account backed by Firebase Authentication.",
 };
 
 export default function AuthPage() {

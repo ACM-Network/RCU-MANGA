@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { UniversePage } from "@/components/universe/universe-page";
 
 export const metadata: Metadata = {
-  title: "Universe Lore | RCPU",
+  title: "Universe Lore | Realm Cinematic",
   description: "Explore the timeline, characters, factions, and crossover map behind the RCPU franchise.",
 };
 

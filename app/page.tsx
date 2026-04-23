@@ -16,18 +16,18 @@ export default function HomePage() {
 
       <section className="section-shell space-y-6">
         <SectionHeading
-          eyebrow="For You"
+          eyebrow="Retention"
           title="Continue Reading"
-          description="Reading history syncs to your profile and surfaces the exact chapter you left off on."
+          description="Your last read chapter is always pinned for instant re-entry, whether you're browsing as a guest or signed in."
         />
         <ContinueReading />
       </section>
 
       <section className="section-shell space-y-6">
         <SectionHeading
-          eyebrow="Momentum"
+          eyebrow="Discovery"
           title="Trending Manga"
-          description="High-velocity stories with the strongest engagement across the connected universe."
+          description="High-velocity stories pulling the strongest engagement across the platform right now."
         />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {trending.map((entry) => (
@@ -38,9 +38,9 @@ export default function HomePage() {
 
       <section className="section-shell space-y-6">
         <SectionHeading
-          eyebrow="Smart Picks"
-          title="Because You Read"
-          description="A first-pass recommendation rail built from your recent reading history, genre overlap, and universe affinity."
+          eyebrow="Personalized"
+          title="Recommended For You"
+          description="A basic recommendation layer driven by your recent reading history, genre overlap, and universe affinity."
         />
         <BecauseYouRead />
       </section>
@@ -48,8 +48,8 @@ export default function HomePage() {
       <section className="section-shell space-y-6">
         <SectionHeading
           eyebrow="Fresh Drops"
-          title="Latest Updates"
-          description="New chapter releases, recent universe movement, and fast access to current story arcs."
+          title="Recently Updated"
+          description="New chapter releases and current story movement across the connected manga universe."
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {latest.map((entry) => (

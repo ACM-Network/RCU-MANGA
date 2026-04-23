@@ -15,10 +15,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <div className="page-shell min-h-screen">
       <SiteHeader />
-      <main>{children}</main>
+      <main className="relative z-10">{children}</main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

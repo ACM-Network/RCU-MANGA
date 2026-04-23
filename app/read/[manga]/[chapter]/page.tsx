@@ -14,15 +14,15 @@ export async function generateMetadata({ params }: ReadPageProps): Promise<Metad
 
   if (!result) {
     return {
-      title: "Chapter Not Found | RCPU",
+      title: "Chapter Not Found | Realm Cinematic",
     };
   }
 
   return {
-    title: `${result.manga.title} - ${result.chapter.title} | RCPU`,
+    title: `${result.manga.title} - ${result.chapter.title} | Realm Cinematic`,
     description: result.chapter.synopsis,
     openGraph: {
-      title: `${result.manga.title} - ${result.chapter.title} | RCPU`,
+      title: `${result.manga.title} - ${result.chapter.title} | Realm Cinematic`,
       description: result.chapter.synopsis,
       images: [{ url: result.manga.heroImage }],
     },
