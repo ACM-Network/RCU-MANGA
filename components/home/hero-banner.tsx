@@ -60,7 +60,7 @@ export function HeroBanner({ manga }: { manga: Manga[] }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <ButtonLink href={`/manga/${active.slug}/chapter/${latestChapter.id}`}>Start Reading</ButtonLink>
+            <ButtonLink href={`/read/${active.slug}/${latestChapter.id}`}>Start Reading</ButtonLink>
             <ButtonLink href={`/manga/${active.slug}`} variant="secondary">
               Explore Series
             </ButtonLink>

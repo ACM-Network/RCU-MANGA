@@ -92,7 +92,7 @@ export default async function MangaDetailPage({ params }: MangaDetailPageProps) 
           {manga.chapters.map((chapter) => (
             <Link
               key={chapter.id}
-              href={`/manga/${manga.slug}/chapter/${chapter.id}`}
+              href={`/read/${manga.slug}/${chapter.id}`}
               className="block rounded-[28px] border border-white/8 bg-white/[0.03] p-5 transition hover:bg-white/[0.05]"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

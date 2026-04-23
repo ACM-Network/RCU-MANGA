@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+
 import { useAuth } from "@/hooks/use-auth";
-import { persistUserLibrary } from "@/lib/firebase/user-library";
+import { ensureUserProfile } from "@/lib/firebase/user-library";
 
 export function FirebaseSync() {
   const { user } = useAuth();
@@ -10,16 +11,11 @@ export function FirebaseSync() {
   useEffect(() => {
     if (!user) return;
 
-    persistUserLibrary({
+    void ensureUserProfile({
       id: user.uid,
       name: user.displayName || "RCPU Reader",
       email: user.email || "",
-      bookmarks: [],
-      readingHistory: {},
-      likedChapters: [],
     });
-
-    console.log("🔥 Firestore Sync:", user.uid);
   }, [user]);
 
   return null;

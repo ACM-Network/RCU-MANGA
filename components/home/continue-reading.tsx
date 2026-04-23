@@ -53,7 +53,7 @@ export function ContinueReading() {
         entries.map((entry) => (
           <Link
             key={entry!.chapter.id}
-            href={`/manga/${entry!.manga.slug}/chapter/${entry!.chapter.id}`}
+            href={`/read/${entry!.manga.slug}/${entry!.chapter.id}`}
             className="panel glow-border card-hover overflow-hidden rounded-[28px] p-5"
           >
             <div className="space-y-4">
@@ -67,7 +67,7 @@ export function ContinueReading() {
                   {formatChapterNumber(entry!.chapter.number)} - {entry!.chapter.title}
                 </p>
                 <p className="mt-2 text-xs uppercase tracking-[0.24em] text-zinc-500">
-                  Resume at panel {entry!.panelIndex + 1}
+                  Resume at page {entry!.panelIndex + 1}
                 </p>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">

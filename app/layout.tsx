@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { AppShell } from "@/components/layout/app-shell";
 import { Providers } from "@/components/providers";
 import { siteConfig } from "@/lib/site";
 
@@ -35,9 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <SiteHeader />
-          <main>{children}</main>
-          <SiteFooter />
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

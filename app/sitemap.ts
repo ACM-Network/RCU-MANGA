@@ -19,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     ...manga.chapters.map((chapter) => ({
-      url: `${siteConfig.url}/manga/${manga.slug}/chapter/${chapter.id}`,
+      url: `${siteConfig.url}/read/${manga.slug}/${chapter.id}`,
       lastModified: new Date(chapter.createdAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,

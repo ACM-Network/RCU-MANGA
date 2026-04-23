@@ -66,6 +66,14 @@ export function useReader({
     setUiVisible((current) => !current);
   }, []);
 
+  const showUi = useCallback(() => {
+    setUiVisible(true);
+  }, []);
+
+  const hideUi = useCallback(() => {
+    setUiVisible(false);
+  }, []);
+
   useEffect(() => {
     if (!ready || hasHydratedPageRef.current) return;
 
@@ -122,8 +130,10 @@ export function useReader({
       goToPage,
       goNext,
       goPrevious,
+      showUi,
+      hideUi,
       toggleUi,
     }),
-    [currentPage, goNext, goPrevious, goToPage, toggleUi, totalPages, uiVisible],
+    [currentPage, goNext, goPrevious, goToPage, hideUi, showUi, toggleUi, totalPages, uiVisible],
   );
 }

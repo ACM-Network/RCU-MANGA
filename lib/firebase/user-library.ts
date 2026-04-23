@@ -115,6 +115,13 @@ export async function persistBookmarks(
   ]);
 }
 
+export async function ensureUserProfile(profile: Pick<UserLibraryProfile, "id" | "name" | "email">) {
+  if (profile.id === "guest") return;
+
+  const firestore = requireFirestore();
+  await setDoc(doc(firestore, "users", profile.id), createUserProfileDoc(profile), { merge: true });
+}
+
 export async function persistLikedChapters(
   profile: Pick<UserLibraryProfile, "id" | "name" | "email" | "likedChapters">,
 ) {

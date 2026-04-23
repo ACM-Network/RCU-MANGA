@@ -14,7 +14,7 @@ export function MangaActions({ mangaSlug, firstChapterId }: MangaActionsProps) {
 
   return (
     <div className="mt-8 flex flex-wrap gap-4">
-      <ButtonLink href={`/manga/${mangaSlug}/chapter/${firstChapterId}`}>Start Reading</ButtonLink>
+      <ButtonLink href={`/read/${mangaSlug}/${firstChapterId}`}>Start Reading</ButtonLink>
       <Button variant="secondary" onClick={() => void toggleBookmark(mangaSlug)}>
         {isBookmarked ? "Remove Bookmark" : "Bookmark Series"}
       </Button>
