@@ -1,0 +1,10 @@
+[
+  {
+    "origin": [
+      "https://rcu-manga.vercel.app",
+      "http://localhost:3000"
+    ],
+    "method": ["GET", "HEAD"],
+    "maxAgeSeconds": 3600
+  }
+]

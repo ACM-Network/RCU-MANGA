@@ -5,10 +5,11 @@ function createPages(chapterId: string, previewSources: string[]): ChapterPageAs
     const extension = previewSrc.split(".").pop() ?? "jpg";
 
     return {
-      id: `${chapterId}-pg-${String(index + 1).padStart(2, "0")}`,
-      previewSrc,
-      storagePath: `manga/${chapterId}/asset-${index + 1}-${(index + 17).toString(36)}.${extension}`,
-    };
+  id: `${chapterId}-pg-${String(index + 1).padStart(2, "0")}`,
+  previewSrc,
+  storagePath: `manga/${chapterId}/asset-${index + 1}-${(index + 17).toString(36)}.${extension}`, // keep ✅
+  src: previewSrc,
+};
   });
 }
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { getPageObjectUrl } from "@/lib/reader/page-assets";
 import type { ChapterPageAsset } from "@/lib/types";
 
 interface ReaderPageCanvasProps {
@@ -100,46 +99,33 @@ export function ReaderPageCanvas({
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const image = new window.Image();
+ useEffect(() => {
+  let cancelled = false;
+  const image = new window.Image();
 
-    void getPageObjectUrl(page, {
-      preferProtected,
-      viewerId,
-    })
-      .then((objectUrl) => {
-        image.src = objectUrl;
-        return image.decode().catch(
-          () =>
-            new Promise<void>((resolve, reject) => {
-              image.onload = () => resolve();
-              image.onerror = () => reject(new Error("decode-failed"));
-            }),
-        );
-      })
-      .then(() => {
-        if (cancelled) {
-          return;
-        }
+  image.src = page.src;
 
-        imageRef.current = image;
-        setReady(true);
+  image.onload = () => {
+    if (cancelled) return;
 
-        if (canvasRef.current) {
-          drawPageIntoCanvas(canvasRef.current, image, viewerLabel, pageIndex);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError("This page failed to render.");
-        }
-      });
+    imageRef.current = image;
+    setReady(true);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [page, pageIndex, preferProtected, viewerId, viewerLabel]);
+    if (canvasRef.current) {
+      drawPageIntoCanvas(canvasRef.current, image, viewerLabel, pageIndex);
+    }
+  };
+
+  image.onerror = () => {
+    if (!cancelled) {
+      setError("Failed to load image.");
+    }
+  };
+
+  return () => {
+    cancelled = true;
+  };
+}, [page, pageIndex, viewerLabel]);
 
   useEffect(() => {
     if (!active) {
