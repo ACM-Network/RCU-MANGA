@@ -112,7 +112,7 @@ export function ReaderPageCanvas({
     setReady(true);
 
     if (canvasRef.current) {
-      drawPageIntoCanvas(canvasRef.current, image, viewerLabel, pageIndex);
+      drawPageIntoCanvas(canvasRef.current, image, "", pageIndex);
     }
   };
 
