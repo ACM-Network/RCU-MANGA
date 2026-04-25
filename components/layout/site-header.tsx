@@ -12,7 +12,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/library", label: "Library" },
   { href: "/universe", label: "Universe" },
-  { href: "/auth", label: "Account" },
+  { href: "/account", label: "Account" },
 ];
 
 function isActivePath(pathname: string, href: string) {

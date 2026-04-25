@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  deleteField,
   doc,
   increment,
   onSnapshot,
@@ -446,6 +447,30 @@ export async function persistReadingProgress(profile: UserLibraryProfile, entry:
       readingHistory: {
         [entry.mangaSlug]: entry,
       },
+      updatedAt: nextProfile.updatedAt,
+    },
+    { merge: true },
+  );
+}
+
+export async function clearPersistedReadingHistory(profile: UserLibraryProfile) {
+  const nextProfile: UserLibraryProfile = {
+    ...profile,
+    readingHistory: {},
+    updatedAt: nowIso(),
+  };
+
+  cacheProfile(nextProfile);
+
+  if (profile.id === "guest" || !isFirebaseConfigured || !db) {
+    persistGuestProfile(nextProfile);
+    return;
+  }
+
+  await setDoc(
+    doc(requireFirestore(), "users", profile.id),
+    {
+      readingHistory: deleteField(),
       updatedAt: nextProfile.updatedAt,
     },
     { merge: true },

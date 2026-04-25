@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
+  clearPersistedReadingHistory,
   emptyLibraryProfile,
   ensureUserProfile,
   incrementChapterLikeCount,
@@ -158,6 +159,17 @@ export function useUserLibrary() {
     [commitProfile],
   );
 
+  const clearReadingHistory = useCallback(async () => {
+    const currentProfile = profileRef.current;
+    const nextProfile = {
+      ...currentProfile,
+      readingHistory: {},
+    };
+
+    commitProfile(nextProfile);
+    await clearPersistedReadingHistory(nextProfile);
+  }, [commitProfile]);
+
   const registerChapterView = useCallback(async (chapterId: string) => {
     if (!viewerId) {
       return;
@@ -174,6 +186,7 @@ export function useUserLibrary() {
     toggleBookmark,
     saveProgress,
     toggleLikedChapter,
+    clearReadingHistory,
     registerChapterView,
   };
 }
