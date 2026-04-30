@@ -213,7 +213,7 @@ export function useReader({
       guestPageLimit,
       progress: totalPages ? (currentPage + 1) / totalPages : 0,
       isFirstPage: currentPage === 0,
-      isLastPage: currentPage === totalPages - 1,
+      isLastPage: totalPages > 0 && currentPage === totalPages - 1,
       attemptPage,
       goNext,
       goPrevious,

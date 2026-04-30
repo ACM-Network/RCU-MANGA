@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 
 import { ReaderPageCanvas } from "@/components/reader/reader-page-canvas";
 import { preloadPageAsset } from "@/lib/reader/page-assets";
@@ -11,9 +11,7 @@ interface PageViewerProps {
   title: string;
   currentPage: number;
   previewShift: number;
-  viewerId: string;
   viewerLabel: string;
-  preferProtected: boolean;
   interactionLocked: boolean;
   onNext: () => void;
   onPrevious: () => void;
@@ -36,14 +34,12 @@ function isInteractiveTarget(target: EventTarget | null) {
     : false;
 }
 
-export function PageViewer({
+export const PageViewer = memo(function PageViewer({
   pages,
   title,
   currentPage,
   previewShift,
-  viewerId,
   viewerLabel,
-  preferProtected,
   interactionLocked,
   onNext,
   onPrevious,
@@ -58,24 +54,35 @@ export function PageViewer({
 
   const visiblePages = useMemo(
     () =>
-      [currentPage - 1, currentPage, currentPage + 1].filter(
-        (index): index is number => index >= 0 && index < pages.length,
-      ),
-    [currentPage, pages.length],
+      [currentPage - 1, currentPage, currentPage + 1]
+        .filter((index) => index >= 0 && index < pages.length)
+        .map((index) => ({ index, page: pages[index] }))
+        .filter((entry): entry is { index: number; page: ChapterPageAsset } => Boolean(entry.page)),
+    [currentPage, pages],
   );
 
   useEffect(() => {
-    const preloadTargets = [currentPage - 1, currentPage + 1, currentPage + 2]
+    const preloadTargets = [currentPage, currentPage - 1, currentPage + 1, currentPage + 2]
       .filter((index) => index >= 0 && index < pages.length)
       .map((index) => pages[index]);
 
     preloadTargets.forEach((page) => {
-      preloadPageAsset(page, {
-        preferProtected,
-        viewerId,
-      });
+      if (page) {
+        preloadPageAsset(page);
+      }
     });
-  }, [currentPage, pages, preferProtected, viewerId]);
+  }, [currentPage, pages]);
+
+  useEffect(() => {
+    return () => {
+      gestureRef.current = null;
+
+      if (longPressTimeoutRef.current) {
+        window.clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   function clearLongPress() {
     if (longPressTimeoutRef.current) {
@@ -205,7 +212,7 @@ export function PageViewer({
       <div
         className={`absolute inset-0 transition duration-300 ${interactionLocked ? "scale-[0.985] blur-sm" : "scale-100 blur-0"}`}
       >
-        {visiblePages.map((index) => {
+        {visiblePages.map(({ index, page }) => {
           const offset = index - currentPage;
           const translateX = offset * 100 + previewShift;
           const rotateY = offset * -12;
@@ -213,7 +220,7 @@ export function PageViewer({
 
           return (
             <div
-              key={pages[index].id}
+              key={page.id}
               className="absolute inset-0 origin-center px-3 py-3 transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5 sm:py-5"
               style={{
                 transform: `translate3d(${translateX}%, 0, 0) rotateY(${rotateY}deg) scale(${scale})`,
@@ -221,12 +228,10 @@ export function PageViewer({
             >
               <div className="relative h-full overflow-hidden rounded-[28px] bg-[#05050a] shadow-[0_28px_90px_rgba(0,0,0,0.55)]">
                 <ReaderPageCanvas
-                  page={pages[index]}
+                  page={page}
                   pageIndex={index}
                   title={title}
-                  viewerId={viewerId}
                   viewerLabel={viewerLabel}
-                  preferProtected={preferProtected}
                   active={index === currentPage}
                 />
                 <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-white/6" />
@@ -239,4 +244,4 @@ export function PageViewer({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_34%),linear-gradient(180deg,rgba(0,0,0,0.16),rgba(0,0,0,0.52))]" />
     </div>
   );
-}
+});

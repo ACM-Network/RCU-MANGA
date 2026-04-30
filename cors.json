@@ -1,7 +1,0 @@
-[
-  {
-    "origin": ["https://rcu-manga.vercel.app"],
-    "method": ["GET", "HEAD"],
-    "maxAgeSeconds": 3600
-  }
-]

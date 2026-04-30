@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { memo } from "react";
 
 import type { Manga } from "@/lib/types";
 
@@ -7,8 +8,8 @@ interface PosterCardProps {
   manga: Manga;
 }
 
-export function PosterCard({ manga }: PosterCardProps) {
-  const latestChapter = manga.chapters[manga.chapters.length - 1];
+export const PosterCard = memo(function PosterCard({ manga }: PosterCardProps) {
+  const latestChapter = manga.chapters[manga.chapters.length - 1] ?? null;
 
   return (
     <Link
@@ -37,10 +38,10 @@ export function PosterCard({ manga }: PosterCardProps) {
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-stone-300">{manga.tagline}</p>
         </div>
         <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-stone-400">
-          <span className="truncate pr-4">{latestChapter.title}</span>
+          <span className="truncate pr-4">{latestChapter?.title ?? "No chapters yet"}</span>
           <span>{manga.updatedLabel}</span>
         </div>
       </div>
     </Link>
   );
-}
+});

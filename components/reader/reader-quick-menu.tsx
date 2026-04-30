@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 interface ReaderQuickMenuProps {
   visible: boolean;
@@ -12,7 +12,7 @@ interface ReaderQuickMenuProps {
   onToggleLike: () => void;
 }
 
-export function ReaderQuickMenu({
+export const ReaderQuickMenu = memo(function ReaderQuickMenu({
   visible,
   chapterTitle,
   mangaHref,
@@ -95,4 +95,4 @@ export function ReaderQuickMenu({
       </div>
     </div>
   );
-}
+});

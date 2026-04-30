@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 
 interface OnboardingOverlayProps {
   visible: boolean;
@@ -10,7 +10,7 @@ interface OnboardingOverlayProps {
 
 const previewSequence = [0, -8, 0, -12, 0, -10, 0];
 
-export function OnboardingOverlay({
+export const OnboardingOverlay = memo(function OnboardingOverlay({
   visible,
   onDismiss,
   onPreviewShift,
@@ -58,4 +58,4 @@ export function OnboardingOverlay({
       </div>
     </div>
   );
-}
+});

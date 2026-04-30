@@ -22,7 +22,13 @@ export function HeroBanner({ manga }: { manga: Manga[] }) {
   }, [manga.length]);
 
   const active = manga[activeIndex] ?? manga[0];
-  const latestChapter = active.chapters[active.chapters.length - 1];
+
+  if (!active) {
+    return null;
+  }
+
+  const latestChapter = active.chapters[active.chapters.length - 1] ?? null;
+  const startHref = latestChapter ? `/read/${active.slug}/${latestChapter.id}` : `/manga/${active.slug}`;
 
   return (
     <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[#111217]/80">
@@ -63,7 +69,7 @@ export function HeroBanner({ manga }: { manga: Manga[] }) {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <ButtonLink href={`/read/${active.slug}/${latestChapter.id}`}>Start Reading</ButtonLink>
+            <ButtonLink href={startHref}>Start Reading</ButtonLink>
             <ButtonLink href={`/manga/${active.slug}`} variant="secondary">
               Explore Series
             </ButtonLink>
@@ -105,7 +111,7 @@ export function HeroBanner({ manga }: { manga: Manga[] }) {
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[20px] border border-white/8 bg-white/[0.04] p-4">
                   <p className="text-[11px] uppercase tracking-[0.26em] text-stone-400">Latest Chapter</p>
-                  <p className="mt-2 text-sm text-white">{latestChapter.title}</p>
+                  <p className="mt-2 text-sm text-white">{latestChapter?.title ?? "No chapters yet"}</p>
                 </div>
                 <div className="rounded-[20px] border border-white/8 bg-white/[0.04] p-4">
                   <p className="text-[11px] uppercase tracking-[0.26em] text-stone-400">Story Status</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { memo } from "react";
 
 interface ReaderControlsProps {
   title: string;
@@ -11,7 +12,7 @@ interface ReaderControlsProps {
   nextChapterHref?: string | null;
 }
 
-export function ReaderControls({
+export const ReaderControls = memo(function ReaderControls({
   title,
   currentPage,
   totalPages,
@@ -19,6 +20,9 @@ export function ReaderControls({
   onBack,
   nextChapterHref,
 }: ReaderControlsProps) {
+  const pageCount = Math.max(0, totalPages);
+  const displayPage = pageCount ? Math.min(pageCount, Math.max(1, currentPage + 1)) : 0;
+
   return (
     <>
       <div
@@ -49,7 +53,7 @@ export function ReaderControls({
         style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       >
         <div className="mx-auto flex w-fit flex-col items-center gap-3 px-4">
-          {nextChapterHref && currentPage === totalPages - 1 ? (
+          {nextChapterHref && pageCount > 0 && currentPage === pageCount - 1 ? (
             <Link
               href={nextChapterHref}
               className="pointer-events-auto rounded-full border border-white/10 bg-white/10 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white backdrop-blur-xl transition hover:bg-white/14"
@@ -59,10 +63,10 @@ export function ReaderControls({
           ) : null}
 
           <div className="pointer-events-auto rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs uppercase tracking-[0.32em] text-stone-200 backdrop-blur-xl">
-            {currentPage + 1} / {totalPages}
+            {displayPage} / {pageCount}
           </div>
         </div>
       </div>
     </>
   );
-}
+});

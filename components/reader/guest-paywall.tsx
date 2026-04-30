@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,7 +10,7 @@ interface GuestPaywallProps {
   onClose: () => void;
 }
 
-export function GuestPaywall({ visible, onClose }: GuestPaywallProps) {
+export const GuestPaywall = memo(function GuestPaywall({ visible, onClose }: GuestPaywallProps) {
   const { isConfigured, signInWithGoogle, signUp } = useAuth();
   const [mode, setMode] = useState<"actions" | "email">("actions");
   const [email, setEmail] = useState("");
@@ -125,4 +125,4 @@ export function GuestPaywall({ visible, onClose }: GuestPaywallProps) {
       </div>
     </div>
   );
-}
+});

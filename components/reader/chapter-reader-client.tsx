@@ -50,6 +50,19 @@ export function ChapterReaderClient({
     [manga.slug, previous],
   );
   const nextHref = useMemo(() => (next ? `/read/${manga.slug}/${next.id}` : null), [manga.slug, next]);
+  const readerTitle = useMemo(() => `${manga.title} ${chapter.title}`, [chapter.title, manga.title]);
+  const controlTitle = useMemo(
+    () => `${formatChapterNumber(chapter.number)} - ${chapter.title}`,
+    [chapter.number, chapter.title],
+  );
+  const quickMenuTitle = useMemo(() => `${manga.title} • ${chapter.title}`, [chapter.title, manga.title]);
+  const handlePageChange = useCallback(
+    async (page: number) => {
+      const totalPages = Math.max(chapter.pages.length, 1);
+      await saveProgress(manga.slug, chapter.id, page, Math.max(0, Math.min(1, (page + 1) / totalPages)));
+    },
+    [chapter.id, chapter.pages.length, manga.slug, saveProgress],
+  );
 
   const reader = useReader({
     totalPages: chapter.pages.length,
@@ -58,10 +71,7 @@ export function ChapterReaderClient({
     isAuthenticated,
     previousChapterHref: previousHref,
     nextChapterHref: nextHref,
-    onPageChange: async (page) => {
-      const totalPages = Math.max(chapter.pages.length, 1);
-      await saveProgress(manga.slug, chapter.id, page, Math.max(0, Math.min(1, (page + 1) / totalPages)));
-    },
+    onPageChange: handlePageChange,
   });
 
   const handleBack = useCallback(() => {
@@ -79,6 +89,9 @@ export function ChapterReaderClient({
   const handleToggleLike = useCallback(async () => {
     await toggleLikedChapter(chapter.id);
   }, [chapter.id, toggleLikedChapter]);
+  const handleQuickMenuToggleLike = useCallback(() => {
+    void handleToggleLike();
+  }, [handleToggleLike]);
 
   const handleDoubleTap = useCallback(
     (point: { x: number; y: number }) => {
@@ -91,6 +104,11 @@ export function ChapterReaderClient({
     },
     [chapter.id, toggleLikedChapter],
   );
+  const handleDismissOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    setPreviewShift(0);
+    window.localStorage.setItem(onboardingStorageKey, "true");
+  }, []);
 
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
@@ -161,7 +179,6 @@ export function ChapterReaderClient({
     return <div className="h-[100svh] w-full bg-black" />;
   }
 
-  const viewerId = profile.id === "guest" ? "guest" : profile.id;
   const viewerLabel = profile.email || profile.name || "Preview copy";
   const isChapterLiked = profile.likedChapters.includes(chapter.id);
 
@@ -169,12 +186,10 @@ export function ChapterReaderClient({
     <div className="reader-mode relative h-[100svh] w-full overflow-hidden bg-black">
       <PageViewer
         pages={chapter.pages}
-        title={`${manga.title} ${chapter.title}`}
+        title={readerTitle}
         currentPage={reader.currentPage}
         previewShift={previewShift}
-        viewerId={viewerId}
         viewerLabel={viewerLabel}
-        preferProtected={isAuthenticated}
         interactionLocked={reader.paywallVisible || reader.quickMenuOpen}
         onNext={reader.goNext}
         onPrevious={reader.goPrevious}
@@ -185,7 +200,7 @@ export function ChapterReaderClient({
       />
 
       <ReaderControls
-        title={`${formatChapterNumber(chapter.number)} - ${chapter.title}`}
+        title={controlTitle}
         currentPage={reader.currentPage}
         totalPages={reader.totalPages}
         visible={reader.uiVisible}
@@ -195,21 +210,17 @@ export function ChapterReaderClient({
 
       <OnboardingOverlay
         visible={showOnboarding}
-        onDismiss={() => {
-          setShowOnboarding(false);
-          setPreviewShift(0);
-          window.localStorage.setItem(onboardingStorageKey, "true");
-        }}
+        onDismiss={handleDismissOnboarding}
         onPreviewShift={setPreviewShift}
       />
 
       <ReaderQuickMenu
         visible={reader.quickMenuOpen}
-        chapterTitle={`${manga.title} • ${chapter.title}`}
+        chapterTitle={quickMenuTitle}
         mangaHref={`/manga/${manga.slug}`}
         isLiked={isChapterLiked}
         onClose={reader.closeQuickMenu}
-        onToggleLike={() => void handleToggleLike()}
+        onToggleLike={handleQuickMenuToggleLike}
       />
 
       <GuestPaywall visible={reader.paywallVisible} onClose={reader.closePaywall} />

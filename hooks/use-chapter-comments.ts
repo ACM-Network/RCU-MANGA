@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { addComment, subscribeToComments, toggleCommentLike } from "@/lib/firebase/comments";
+import { addComment, subscribeToComments, toggleCommentLike } from "@/lib/local/comments";
 import type { CommentRecord } from "@/lib/types";
 
 export function useChapterComments(chapterId: string) {

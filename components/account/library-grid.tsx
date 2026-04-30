@@ -61,6 +61,7 @@ export function LibraryGrid({ items, loading = false }: LibraryGridProps) {
                   src={item.coverImage}
                   alt={item.title}
                   fill
+                  loading="lazy"
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 18vw"
                   className="object-cover transition duration-500 group-hover:scale-[1.07]"
                 />

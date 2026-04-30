@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
+import { loadPageImage } from "@/lib/reader/page-assets";
 import type { ChapterPageAsset } from "@/lib/types";
 
 interface ReaderPageCanvasProps {
   page: ChapterPageAsset;
   pageIndex: number;
   title: string;
-  viewerId: string;
   viewerLabel: string;
-  preferProtected: boolean;
   active: boolean;
 }
 
@@ -84,48 +83,48 @@ function drawPageIntoCanvas(
   drawWatermark(context, width, height, viewerLabel, phase);
 }
 
-export function ReaderPageCanvas({
+export const ReaderPageCanvas = memo(function ReaderPageCanvas({
   page,
   pageIndex,
   title,
-  viewerId,
   viewerLabel,
-  preferProtected,
   active,
 }: ReaderPageCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const [phase, setPhase] = useState(pageIndex);
+  const phaseRef = useRef(pageIndex);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
- useEffect(() => {
-  let cancelled = false;
-  const image = new window.Image();
+  useEffect(() => {
+    let cancelled = false;
 
-  image.src = page.src;
+    imageRef.current = null;
+    phaseRef.current = pageIndex;
 
-  image.onload = () => {
-    if (cancelled) return;
+    void loadPageImage(page)
+      .then((image) => {
+        if (cancelled) return;
 
-    imageRef.current = image;
-    setReady(true);
+        imageRef.current = image;
+        setError(null);
+        setReady(true);
 
-    if (canvasRef.current) {
-      drawPageIntoCanvas(canvasRef.current, image, "", pageIndex);
-    }
-  };
+        if (canvasRef.current) {
+          drawPageIntoCanvas(canvasRef.current, image, viewerLabel, phaseRef.current);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReady(false);
+          setError("Failed to load image.");
+        }
+      });
 
-  image.onerror = () => {
-    if (!cancelled) {
-      setError("Failed to load image.");
-    }
-  };
-
-  return () => {
-    cancelled = true;
-  };
-}, [page, pageIndex, viewerLabel]);
+    return () => {
+      cancelled = true;
+    };
+  }, [page, pageIndex, viewerLabel]);
 
   useEffect(() => {
     if (!active) {
@@ -133,11 +132,15 @@ export function ReaderPageCanvas({
     }
 
     const intervalId = window.setInterval(() => {
-      setPhase((current) => current + 1);
+      phaseRef.current += 1;
+
+      if (canvasRef.current && imageRef.current) {
+        drawPageIntoCanvas(canvasRef.current, imageRef.current, viewerLabel, phaseRef.current);
+      }
     }, 2600);
 
     return () => window.clearInterval(intervalId);
-  }, [active]);
+  }, [active, viewerLabel]);
 
   useEffect(() => {
     if (!canvasRef.current || !imageRef.current) {
@@ -147,16 +150,16 @@ export function ReaderPageCanvas({
     const canvas = canvasRef.current;
     const observer = new ResizeObserver(() => {
       if (imageRef.current) {
-        drawPageIntoCanvas(canvas, imageRef.current, viewerLabel, phase);
+        drawPageIntoCanvas(canvas, imageRef.current, viewerLabel, phaseRef.current);
       }
     });
 
     observer.observe(canvas);
 
-    drawPageIntoCanvas(canvas, imageRef.current, viewerLabel, phase);
+    drawPageIntoCanvas(canvas, imageRef.current, viewerLabel, phaseRef.current);
 
     return () => observer.disconnect();
-  }, [phase, ready, viewerLabel]);
+  }, [ready, viewerLabel]);
 
   if (error) {
     return (
@@ -185,4 +188,4 @@ export function ReaderPageCanvas({
       />
     </div>
   );
-}
+});

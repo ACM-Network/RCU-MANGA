@@ -15,7 +15,7 @@ import {
   persistReadingProgress,
   subscribeToUserLibrary,
   type ReaderIdentity,
-} from "@/lib/firebase/user-library";
+} from "@/lib/local/user-library";
 import type { ReadingHistoryEntry, UserLibraryProfile } from "@/lib/types";
 
 function createIdentity(
@@ -131,10 +131,10 @@ export function useUserLibrary() {
         },
       };
 
-      commitProfile(nextProfile);
+      profileRef.current = nextProfile;
       await persistReadingProgress(nextProfile, nextEntry);
     },
-    [commitProfile],
+    [],
   );
 
   const toggleLikedChapter = useCallback(

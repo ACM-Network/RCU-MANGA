@@ -5,7 +5,6 @@ export interface ChapterPageAsset {
   id: string;
   src: string; 
   previewSrc: string;
-  storagePath?: string;
   width?: number;
   height?: number;
 }

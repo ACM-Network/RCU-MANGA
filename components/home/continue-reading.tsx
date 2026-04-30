@@ -60,17 +60,19 @@ export function ContinueReading() {
 
   if (!entries.length) {
     const featured = mangaLibrary[0];
-    const firstChapter = featured.chapters[0];
+    const firstChapter = featured?.chapters[0] ?? null;
 
     return (
       <div className="panel rounded-[32px] p-6 sm:p-7">
         <p className="text-xs uppercase tracking-[0.34em] text-stone-400">Your Queue Is Empty</p>
         <h3 className="mt-4 text-3xl font-semibold text-white">Start one chapter and we’ll pin it here.</h3>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-300">
-          Progress is stored locally for guests and synced to Firebase as soon as you create an account.
+          Progress is stored locally in this browser for both guest and signed-in reading.
         </p>
         <div className="mt-6">
-          <ButtonLink href={`/read/${featured.slug}/${firstChapter.id}`}>Read Featured Premiere</ButtonLink>
+          <ButtonLink href={featured && firstChapter ? `/read/${featured.slug}/${firstChapter.id}` : "/library"}>
+            Read Featured Premiere
+          </ButtonLink>
         </div>
       </div>
     );

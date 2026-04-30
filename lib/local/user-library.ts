@@ -1,15 +1,5 @@
 "use client";
 
-import {
-  deleteField,
-  doc,
-  increment,
-  onSnapshot,
-  setDoc,
-  type Unsubscribe,
-} from "firebase/firestore";
-
-import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import type { ReadingHistoryEntry, UserLibraryProfile } from "@/lib/types";
 
 export type ReaderIdentity = {
@@ -127,9 +117,9 @@ function normalizeProfile(
     name: rawProfile?.name ?? fallback.name,
     email: rawProfile?.email ?? fallback.email,
     photoURL: rawProfile?.photoURL ?? fallback.photoURL ?? "",
-    bookmarks: Array.isArray(rawProfile?.bookmarks) ? rawProfile?.bookmarks : fallback.bookmarks,
+    bookmarks: Array.isArray(rawProfile?.bookmarks) ? rawProfile.bookmarks : fallback.bookmarks,
     likedChapters: Array.isArray(rawProfile?.likedChapters)
-      ? rawProfile?.likedChapters
+      ? rawProfile.likedChapters
       : fallback.likedChapters,
     readingHistory: normalizeReadingHistory(rawProfile?.readingHistory),
     updatedAt: rawProfile?.updatedAt ?? fallback.updatedAt ?? nowIso(),
@@ -147,13 +137,8 @@ function mergeReadingHistory(
       const left = first[key];
       const right = second[key];
 
-      if (!left) {
-        return [key, right];
-      }
-
-      if (!right) {
-        return [key, left];
-      }
+      if (!left) return [key, right];
+      if (!right) return [key, left];
 
       return [key, left.updatedAt >= right.updatedAt ? left : right];
     }),
@@ -224,36 +209,8 @@ function cacheProfile(profile: UserLibraryProfile) {
   safeWriteStorage(getUserCacheKey(profile.id), serializeProfile(profile));
 }
 
-function persistGuestProfile(profile: UserLibraryProfile) {
-  const guestProfile = normalizeProfile(profile, emptyLibraryProfile);
-  cacheProfile({
-    ...guestProfile,
-    id: "guest",
-    name: "Guest Reader",
-    email: "",
-    photoURL: "",
-  });
-}
-
-function createUserDoc(profile: UserLibraryProfile) {
-  return {
-    id: profile.id,
-    name: profile.name,
-    email: profile.email,
-    photoURL: profile.photoURL ?? "",
-    bookmarks: profile.bookmarks,
-    likedChapters: profile.likedChapters,
-    readingHistory: profile.readingHistory,
-    updatedAt: profile.updatedAt ?? nowIso(),
-  };
-}
-
-function requireFirestore() {
-  if (!db || !isFirebaseConfigured) {
-    throw new Error("Firebase Firestore is not configured.");
-  }
-
-  return db;
+function resolveProfileKey(identity: ReaderIdentity | null) {
+  return identity ? getUserCacheKey(identity.id) : guestLibraryStorageKey;
 }
 
 export function subscribeToUserLibrary(
@@ -261,57 +218,32 @@ export function subscribeToUserLibrary(
   callback: (profile: UserLibraryProfile) => void,
   onError?: (message: string) => void,
 ) {
+  void onError;
+
   const baseProfile = createProfileFromIdentity(identity);
-
-  if (!identity) {
-    const guestProfile = loadGuestLibraryProfile();
-    callback(normalizeProfile(guestProfile, baseProfile));
-
-    if (typeof window === "undefined") {
-      return () => undefined;
+  const readProfile = () => {
+    if (!identity) {
+      return normalizeProfile(loadGuestLibraryProfile(), baseProfile);
     }
 
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === guestLibraryStorageKey) {
-        callback(normalizeProfile(loadGuestLibraryProfile(), baseProfile));
-      }
-    };
+    return loadUserLibraryCache(identity);
+  };
 
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }
+  callback(readProfile());
 
-  const cachedProfile = loadUserLibraryCache(identity);
-  callback(cachedProfile);
-
-  if (!isFirebaseConfigured || !db) {
+  if (typeof window === "undefined") {
     return () => undefined;
   }
 
-  let unsubscribe: Unsubscribe = () => undefined;
+  const watchedKey = resolveProfileKey(identity);
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === watchedKey) {
+      callback(readProfile());
+    }
+  };
 
-  try {
-    unsubscribe = onSnapshot(
-      doc(db, "users", identity.id),
-      (snapshot) => {
-        const nextProfile = snapshot.exists()
-          ? normalizeProfile(snapshot.data() as Partial<UserLibraryProfile>, baseProfile)
-          : cachedProfile;
-
-        cacheProfile(nextProfile);
-        callback(nextProfile);
-      },
-      () => {
-        callback(cachedProfile);
-        onError?.("Cloud sync is temporarily unavailable. Your local reading state is still safe.");
-      },
-    );
-  } catch {
-    callback(cachedProfile);
-    onError?.("Cloud sync could not start. Falling back to local reader state.");
-  }
-
-  return unsubscribe;
+  window.addEventListener("storage", handleStorage);
+  return () => window.removeEventListener("storage", handleStorage);
 }
 
 export async function ensureUserProfile(identity: ReaderIdentity) {
@@ -319,22 +251,20 @@ export async function ensureUserProfile(identity: ReaderIdentity) {
     return;
   }
 
-  const firestore = requireFirestore();
   const cachedProfile = loadUserLibraryCache(identity);
-  const nextProfile = normalizeProfile(
-    {
-      ...cachedProfile,
-      id: identity.id,
-      name: identity.name ?? cachedProfile.name,
-      email: identity.email ?? cachedProfile.email,
-      photoURL: identity.photoURL ?? cachedProfile.photoURL,
-      updatedAt: nowIso(),
-    },
-    createProfileFromIdentity(identity),
+  cacheProfile(
+    normalizeProfile(
+      {
+        ...cachedProfile,
+        id: identity.id,
+        name: identity.name ?? cachedProfile.name,
+        email: identity.email ?? cachedProfile.email,
+        photoURL: identity.photoURL ?? cachedProfile.photoURL,
+        updatedAt: nowIso(),
+      },
+      createProfileFromIdentity(identity),
+    ),
   );
-
-  cacheProfile(nextProfile);
-  await setDoc(doc(firestore, "users", identity.id), createUserDoc(nextProfile), { merge: true });
 }
 
 export async function mergeGuestProfileIntoUser(identity: ReaderIdentity) {
@@ -353,7 +283,6 @@ export async function mergeGuestProfileIntoUser(identity: ReaderIdentity) {
   }
 
   const currentProfile = loadUserLibraryCache(identity);
-
   const mergedProfile = normalizeProfile(
     {
       ...currentProfile,
@@ -369,116 +298,43 @@ export async function mergeGuestProfileIntoUser(identity: ReaderIdentity) {
 
   cacheProfile(mergedProfile);
   safeRemoveStorage(guestLibraryStorageKey);
-
-  if (!isFirebaseConfigured || !db) {
-    return;
-  }
-
-  const firestore = requireFirestore();
-  await setDoc(doc(firestore, "users", identity.id), createUserDoc(mergedProfile), { merge: true });
 }
 
 export async function persistBookmarks(profile: UserLibraryProfile) {
-  const nextProfile = {
+  cacheProfile({
     ...profile,
     updatedAt: nowIso(),
-  };
-
-  cacheProfile(nextProfile);
-
-  if (profile.id === "guest" || !isFirebaseConfigured || !db) {
-    persistGuestProfile(nextProfile);
-    return;
-  }
-
-  await setDoc(
-    doc(requireFirestore(), "users", profile.id),
-    {
-      bookmarks: nextProfile.bookmarks,
-      updatedAt: nextProfile.updatedAt,
-    },
-    { merge: true },
-  );
+  });
 }
 
 export async function persistLikedChapters(profile: UserLibraryProfile) {
-  const nextProfile = {
+  cacheProfile({
     ...profile,
     updatedAt: nowIso(),
-  };
-
-  cacheProfile(nextProfile);
-
-  if (profile.id === "guest" || !isFirebaseConfigured || !db) {
-    persistGuestProfile(nextProfile);
-    return;
-  }
-
-  await setDoc(
-    doc(requireFirestore(), "users", profile.id),
-    {
-      likedChapters: nextProfile.likedChapters,
-      updatedAt: nextProfile.updatedAt,
-    },
-    { merge: true },
-  );
+  });
 }
 
 export async function persistReadingProgress(profile: UserLibraryProfile, entry: ReadingHistoryEntry) {
-  const nextProfile: UserLibraryProfile = {
+  cacheProfile({
     ...profile,
     readingHistory: {
       ...profile.readingHistory,
       [entry.mangaSlug]: entry,
     },
     updatedAt: nowIso(),
-  };
-
-  cacheProfile(nextProfile);
-
-  if (profile.id === "guest" || !isFirebaseConfigured || !db) {
-    persistGuestProfile(nextProfile);
-    return;
-  }
-
-  await setDoc(
-    doc(requireFirestore(), "users", profile.id),
-    {
-      readingHistory: {
-        [entry.mangaSlug]: entry,
-      },
-      updatedAt: nextProfile.updatedAt,
-    },
-    { merge: true },
-  );
+  });
 }
 
 export async function clearPersistedReadingHistory(profile: UserLibraryProfile) {
-  const nextProfile: UserLibraryProfile = {
+  cacheProfile({
     ...profile,
     readingHistory: {},
     updatedAt: nowIso(),
-  };
-
-  cacheProfile(nextProfile);
-
-  if (profile.id === "guest" || !isFirebaseConfigured || !db) {
-    persistGuestProfile(nextProfile);
-    return;
-  }
-
-  await setDoc(
-    doc(requireFirestore(), "users", profile.id),
-    {
-      readingHistory: deleteField(),
-      updatedAt: nextProfile.updatedAt,
-    },
-    { merge: true },
-  );
+  });
 }
 
 export async function incrementChapterView(chapterId: string, viewerId: string) {
-  if (!chapterId || !viewerId || !isFirebaseConfigured || !db) {
+  if (!chapterId || !viewerId) {
     return;
   }
 
@@ -489,30 +345,10 @@ export async function incrementChapterView(chapterId: string, viewerId: string) 
   }
 
   safeWriteSessionStorage(viewStorageKey, "1");
-
-  await setDoc(
-    doc(requireFirestore(), "chapters", chapterId),
-    {
-      chapterId,
-      views: increment(1),
-      updatedAt: nowIso(),
-    },
-    { merge: true },
-  );
 }
 
-export async function incrementChapterLikeCount(chapterId: string, delta: 1 | -1) {
-  if (!chapterId || !isFirebaseConfigured || !db) {
-    return;
-  }
-
-  await setDoc(
-    doc(requireFirestore(), "chapters", chapterId),
-    {
-      chapterId,
-      likes: increment(delta),
-      updatedAt: nowIso(),
-    },
-    { merge: true },
-  );
+export async function incrementChapterLikeCount(_chapterId: string, _delta: 1 | -1) {
+  void _chapterId;
+  void _delta;
+  return;
 }

@@ -79,7 +79,13 @@ export default async function MangaDetailPage({ params }: MangaDetailPageProps) 
             </span>
           </div>
 
-          <MangaActions mangaSlug={manga.slug} firstChapterId={firstChapter.id} />
+          {firstChapter ? (
+            <MangaActions mangaSlug={manga.slug} firstChapterId={firstChapter.id} />
+          ) : (
+            <p className="mt-8 rounded-[24px] border border-white/10 bg-white/5 px-5 py-4 text-sm text-stone-300">
+              Chapters are not available for this series yet.
+            </p>
+          )}
         </div>
       </section>
 

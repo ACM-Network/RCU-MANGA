@@ -54,6 +54,7 @@ export function UniversePage() {
                   src={character.image}
                   alt={character.name}
                   fill
+                  loading="lazy"
                   sizes="(max-width: 768px) 100vw, 25vw"
                   className="object-cover"
                 />

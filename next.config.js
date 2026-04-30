@@ -17,10 +17,6 @@ const nextConfig = {
             key: "Referrer-Policy",
             value: "same-origin",
           },
-          {
-            key: "Cross-Origin-Resource-Policy",
-            value: "same-origin",
-          },
         ],
       },
     ];

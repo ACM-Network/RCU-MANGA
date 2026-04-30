@@ -115,6 +115,7 @@ export function ContinueReading({
               src={current.coverImage}
               alt={current.mangaTitle}
               fill
+              loading="lazy"
               sizes="(max-width: 640px) 80vw, 180px"
               className="object-cover transition duration-500 group-hover:scale-[1.07]"
             />
@@ -162,6 +163,7 @@ export function ContinueReading({
                   src={item.coverImage}
                   alt={item.mangaTitle}
                   fill
+                  loading="lazy"
                   sizes="88px"
                   className="object-cover transition duration-500 group-hover:scale-[1.08]"
                 />

@@ -21,7 +21,6 @@ import {
 
 import {
   auth,
-  ensureFirebaseAppCheck,
   googleProvider,
   isFirebaseConfigured,
 } from "@/lib/firebase/client";
@@ -46,8 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isFirebaseConfigured || !auth) {
       return;
     }
-
-    ensureFirebaseAppCheck();
 
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);

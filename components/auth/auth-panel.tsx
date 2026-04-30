@@ -9,10 +9,18 @@ import { useAuth } from "@/hooks/use-auth";
 
 type Mode = "login" | "signup";
 
+function normalizeReturnTo(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+
+  return value;
+}
+
 export function AuthPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo");
+  const returnTo = normalizeReturnTo(searchParams.get("returnTo"));
   const { isConfigured, signIn, signInWithGoogle, signOut, signUp, user } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signup");
@@ -28,7 +36,7 @@ export function AuthPanel() {
 
     try {
       await signInWithGoogle();
-      router.replace(returnTo || "/");
+      router.replace(returnTo);
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : "Google Sign-In failed.");
     } finally {
@@ -48,7 +56,7 @@ export function AuthPanel() {
         await signUp(name, email, password);
       }
 
-      router.replace(returnTo || "/");
+      router.replace(returnTo);
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : "Authentication failed.");
     } finally {
@@ -75,13 +83,13 @@ export function AuthPanel() {
           <div className="rounded-[26px] border border-white/8 bg-white/[0.03] p-5">
             <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Cloud Sync</p>
             <p className="mt-3 text-sm leading-7 text-stone-300">
-              Firebase saves bookmarks, likes, and page-level progress so re-entry feels instant.
+              Bookmarks, likes, and page-level progress are saved locally so re-entry feels instant.
             </p>
           </div>
           <div className="rounded-[26px] border border-white/8 bg-white/[0.03] p-5">
             <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Protected Access</p>
             <p className="mt-3 text-sm leading-7 text-stone-300">
-              Authenticated sessions can be wired to protected Firebase Storage and App Check for stronger asset protection.
+              Manga pages are served from local static assets, keeping the reader independent from cloud storage.
             </p>
           </div>
         </div>
@@ -105,10 +113,10 @@ export function AuthPanel() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
-                href={returnTo || "/"}
+                href={returnTo}
                 className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
               >
-                {returnTo ? "Return to Reader" : "Back to Home"}
+                {returnTo === "/" ? "Back to Home" : "Return to Reader"}
               </Link>
               <Button variant="secondary" onClick={() => void signOut()}>
                 Logout

@@ -1,16 +1,11 @@
 import type { Chapter, ChapterPageAsset } from "@/lib/types";
 
-function createPages(chapterId: string, previewSources: string[]): ChapterPageAsset[] {
-  return previewSources.map((previewSrc, index) => {
-    const extension = previewSrc.split(".").pop() ?? "jpg";
-
-    return {
-  id: `${chapterId}-pg-${String(index + 1).padStart(2, "0")}`,
-  previewSrc,
-  storagePath: `manga/${chapterId}/asset-${index + 1}-${(index + 17).toString(36)}.${extension}`, // keep ✅
-  src: previewSrc,
-};
-  });
+function createPages(chapterId: string, pageSources: string[]): ChapterPageAsset[] {
+  return pageSources.map((src, index) => ({
+    id: `${chapterId}-pg-${String(index + 1).padStart(2, "0")}`,
+    previewSrc: src,
+    src,
+  }));
 }
 
 export const mangaChapters: Record<string, Chapter[]> = {
